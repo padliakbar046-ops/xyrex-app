@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - Gmail Sementara</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; }
+  .back-btn { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 28px; font-weight: 800; color: #0a1a3a; }
+  .title span { color: #ea4335; }
+  .subtitle { color: #4a5a7a; font-size: 13px; margin-top: 4px; }
+  .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 18px; box-shadow: 4px 4px 0 #0a0a0a; }
+  .btn { display: block; width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; margin-bottom: 10px; }
+  .btn-primary { background: #ea4335; color: #fff; }
+  .btn-secondary { background: #1a5fd6; color: #fff; }
+  .email-display { background: #f5f8ff; border: 3px solid #0a0a0a; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 800; color: #0a1a3a; word-break: break-all; text-align: center; margin-bottom: 12px; user-select: all; }
+  .msg-list { max-height: 400px; overflow-y: auto; }
+  .msg-item { background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .msg-item .from { font-weight: 800; color: #ea4335; font-size: 12px; }
+  .msg-item .subj { font-weight: 700; color: #0a1a3a; font-size: 14px; margin-top: 4px; }
+  .msg-item .body { font-size: 12px; color: #4a5a7a; margin-top: 6px; line-height: 1.5; white-space: pre-wrap; }
+  .status { font-size: 12px; color: #4a5a7a; text-align: center; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/tools.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
+  <div class="brand">Gmail Sementara</div>
+  <div class="user-mini" id="userMini">-</div>
+</div>
+
+<div class="title-wrap">
+  <div class="title">Gmail <span>Sementara</span></div>
+  <div class="subtitle">Email sekali pakai, otomatis hapus</div>
+</div>
+
+<div class="card">
+  <button class="btn btn-primary" onclick="generateEmail()">Generate Email</button>
+  <div id="emailBox" style="display:none;">
+    <div class="email-display" id="emailDisplay">-</div>
+    <button class="btn btn-secondary" onclick="refreshInbox()">Refresh Inbox</button>
+    <div class="msg-list" id="msgList"></div>
+    <div class="status" id="status">-</div>
+  </div>
+</div>
+
+<script>
+const token = localStorage.getItem('xyrex_token');
+const user = localStorage.getItem('xyrex_user');
+if (!token) window.location.href = '/login.html';
+document.getElementById('userMini').textContent = (user || '-').toUpperCase();
+
+let currentEmail = '';
+let currentPass = '';
+let currentToken = '';
+
+async function generateEmail() {
+  try {
+    const r = await fetch('/api/tools/gmail/create', {
+      method: 'POST',
+      headers: { 'x-auth-token': token }
+    });
+    const j = await r.json();
+    if (!j.ok) { alert('Gagal: ' + (j.msg || 'unknown')); return; }
+    currentEmail = j.email;
+    currentPass = j.password;
+    currentToken = j.token;
+    document.getElementById('emailDisplay').textContent = currentEmail;
+    document.getElementById('emailBox').style.display = 'block';
+    document.getElementById('status').textContent = 'Menunggu email masuk...';
+    document.getElementById('msgList').innerHTML = '';
+    setInterval(refreshInbox, 10000);
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+async function refreshInbox() {
+  if (!currentToken) return;
+  try {
+    const r = await fetch('/api/tools/gmail/inbox?token=' + encodeURIComponent(currentToken), {
+      headers: { 'x-auth-token': token }
+    });
+    const j = await r.json();
+    if (!j.ok) return;
+    const list = document.getElementById('msgList');
+    list.innerHTML = '';
+    if (!j.messages || j.messages.length === 0) {
+      list.innerHTML = '<div style="text-align:center; color:#7a8aaa; padding:16px;">Belum ada email</div>';
+      return;
+    }
+    j.messages.forEach(m => {
+      const el = document.createElement('div');
+      el.className = 'msg-item';
+      el.innerHTML = '<div class="from">' + (m.from || '-') + '</div><div class="subj">' + (m.subject || '-') + '</div><div class="body">' + (m.intro || '-') + '</div>';
+      list.appendChild(el);
+    });
+    document.getElementById('status').textContent = j.messages.length + ' email diterima';
+  } catch (e) {}
+}
+</script>
+
+<script src="/tools-toast.js"></script>
+<script src="/global-player-iframe.js"></script>
+</body>
+</html>

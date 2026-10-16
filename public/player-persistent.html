@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Player</title>
+<style>* { margin: 0; padding: 0; } body { background: transparent; overflow: hidden; }</style>
+</head>
+<body>
+<script>
+(function() {
+  var audio = null;
+  var currentState = null;
+  var lastUrl = '';
+
+  function getState() {
+    try {
+      var raw = localStorage.getItem('xyrex_player');
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (e) { return null; }
+  }
+
+  function saveState() {
+    if (!audio || !audio.src) return;
+    try {
+      localStorage.setItem('xyrex_player', JSON.stringify({
+        url: audio.src,
+        title: currentState ? currentState.title : '',
+        artist: currentState ? currentState.artist : '',
+        artwork: currentState ? currentState.artwork : '',
+        time: audio.currentTime,
+        playing: !audio.paused,
+        owner: currentState ? currentState.owner : '',
+        savedAt: Date.now()
+      }));
+    } catch (e) {}
+  }
+
+  function ensureAudio() {
+    if (!audio) {
+      audio = new Audio();
+      audio.crossOrigin = 'anonymous';
+    }
+    return audio;
+  }
+
+  function playFromState(state) {
+    ensureAudio();
+    currentState = state;
+    if (audio.src !== state.url) {
+      audio.src = state.url;
+      audio.currentTime = state.time || 0;
+    }
+    if (state.playing) {
+      audio.play().catch(function(e) {
+        console.log('[Iframe] Autoplay blocked:', e.message);
+      });
+    }
+  }
+
+  function stopAudio() {
+    if (audio) {
+      try { audio.pause(); } catch (e) {}
+      audio.src = '';
+    }
+    lastUrl = '';
+  }
+
+  // Dengarkan perintah stop dari parent
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'stop') {
+      console.log('[Iframe] Stop command received');
+      stopAudio();
+    }
+  });
+
+  // Poll localStorage
+  setInterval(function() {
+    var state = getState();
+    if (!state || !state.url) {
+      if (audio && !audio.paused) stopAudio();
+      return;
+    }
+    if (state.url !== lastUrl) {
+      lastUrl = state.url;
+      playFromState(state);
+    } else {
+      if (audio && state.playing && audio.paused) audio.play().catch(function(){});
+      if (audio && !state.playing && !audio.paused) audio.pause();
+    }
+  }, 500);
+
+  setInterval(saveState, 1000);
+  window.addEventListener('beforeunload', saveState);
+})();
+</script>
+</body>
+</html>

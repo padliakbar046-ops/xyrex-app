@@ -109,6 +109,8 @@ async function doLogin() {
     localStorage.setItem('xyrex_token', j.token);
     localStorage.setItem('xyrex_user', j.username);
     localStorage.setItem('xyrex_role', j.role);
+    localStorage.removeItem('xyrex_player');
+    localStorage.removeItem('xyrex_sender');
     showMsg('Login berhasil, mengalihkan...', true);
     setTimeout(() => { window.location.href = '/index.html'; }, 600);
   } catch (e) {

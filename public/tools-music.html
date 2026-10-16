@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - Music Player</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 100px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .back-btn { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 28px; font-weight: 800; color: #0a1a3a; }
+  .title span { color: #1db954; }
+  .subtitle { color: #4a5a7a; font-size: 13px; margin-top: 4px; }
+  .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 18px; box-shadow: 4px 4px 0 #0a0a0a; }
+  input { width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 14px; margin-bottom: 12px; background: #f5f8ff; }
+  input:focus { outline: none; border-color: #1db954; }
+  .btn { display: block; width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; background: #1db954; color: #fff; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .track-list { margin-top: 14px; }
+  .track-item { background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 12px; padding: 12px; margin-bottom: 10px; display: flex; gap: 12px; align-items: flex-start; }
+  .track-item .cover { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; border: 2px solid #0a0a0a; background: #1db954; flex-shrink: 0; }
+  .track-item .meta { flex: 1; min-width: 0; }
+  .track-item .title { font-size: 13px; font-weight: 800; color: #0a1a3a; line-height: 1.3; }
+  .track-item .artist { font-size: 11px; color: #4a5a7a; margin-top: 3px; line-height: 1.3; }
+  .track-item .actions { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+  .mini-btn { padding: 8px 12px; border: 2px solid #0a0a0a; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; box-shadow: 2px 2px 0 #0a0a0a; text-align: center; width: 100%; }
+  .mini-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .mini-btn.play-btn { background: #1db954; color: #fff; }
+  .mini-btn.yt-btn { background: #ff0000; color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/tools.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
+  <div class="brand">Music Player</div>
+  <div class="user-mini" id="userMini">-</div>
+</div>
+
+<div class="title-wrap">
+  <div class="title">Music <span>Player</span></div>
+  <div class="subtitle">Cari lagu, putar preview + cover art</div>
+</div>
+
+<div class="card">
+  <input type="text" id="searchInput" placeholder="Cari lagu atau artis...">
+  <button class="btn" onclick="searchMusic()">Cari</button>
+  <div style="margin-top:14px; font-size:12px; font-weight:800; color:#4a5a7a; letter-spacing:1px; text-transform:uppercase;" id="listTitle">Sedang Populer</div>
+  <div id="searchResult" class="track-list"></div>
+</div>
+
+<script src="/tools-toast.js"></script>
+<script src="/global-player-iframe.js"></script>
+<script>
+const token = localStorage.getItem('xyrex_token');
+const user = localStorage.getItem('xyrex_user');
+if (!token) window.location.href = '/login.html';
+document.getElementById('userMini').textContent = (user || '-').toUpperCase();
+
+async function searchMusic() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) { window.xyrexToast('Masukkan judul lagu', 'error'); return; }
+  document.getElementById('listTitle').textContent = 'Hasil Pencarian';
+  const list = document.getElementById('searchResult');
+  list.innerHTML = '<div style="text-align:center; padding:16px; color:#7a8aaa;">Mencari...</div>';
+  try {
+    const r = await fetch('/api/tools/music/search?q=' + encodeURIComponent(q), { headers: { 'x-auth-token': token } });
+    const j = await r.json();
+    if (!j.ok || !j.results || j.results.length === 0) {
+      window.xyrexToast('Lagu tidak ditemukan', 'error');
+      list.innerHTML = '<div style="text-align:center; color:#7a8aaa; padding:20px;">Tidak ada hasil</div>';
+      return;
+    }
+    renderTracks(j.results);
+  } catch (e) {
+    window.xyrexToast('Error: ' + e.message, 'error');
+    list.innerHTML = '';
+  }
+}
+
+async function loadTrending() {
+  const list = document.getElementById('searchResult');
+  document.getElementById('listTitle').textContent = 'Sedang Populer';
+  list.innerHTML = '<div style="text-align:center; padding:16px; color:#7a8aaa;">Memuat trending...</div>';
+  try {
+    const r = await fetch('/api/tools/music/trending', { headers: { 'x-auth-token': token } });
+    const j = await r.json();
+    if (!j.ok || !j.results || j.results.length === 0) {
+      list.innerHTML = '<div style="text-align:center; color:#7a8aaa; padding:20px;">Trending tidak tersedia</div>';
+      return;
+    }
+    renderTracks(j.results);
+  } catch (e) {
+    list.innerHTML = '<div style="text-align:center; color:#7a8aaa; padding:20px;">Gagal load trending</div>';
+  }
+}
+
+function renderTracks(tracks) {
+  const list = document.getElementById('searchResult');
+  list.innerHTML = '';
+  window._tracks = tracks;
+  tracks.forEach(function(t, idx) {
+    var el = document.createElement('div');
+    el.className = 'track-item';
+    el.innerHTML = '<img class="cover" src="' + (t.artwork || '') + '" onerror="this.style.background=\'#1db954\'">' +
+      '<div class="meta">' +
+      '<div class="title">' + escapeHtml(t.title) + '</div>' +
+      '<div class="artist">' + escapeHtml(t.artist) + ' • ' + escapeHtml(t.album) + ' • ' + (t.duration || '-') + '</div>' +
+      '<div class="actions">' +
+      '<button class="mini-btn play-btn" onclick="playTrackByIndex(' + idx + ')">▶ Putar Preview</button>' +
+      '<button class="mini-btn yt-btn" onclick="openYouTube(\'' + escapeAttr(t.title) + '\', \'' + escapeAttr(t.artist) + '\')">▶ Full di YouTube</button>' +
+      '</div></div>';
+    list.appendChild(el);
+  });
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, function(c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function escapeAttr(s) {
+  return String(s || '').replace(/'/g, '').replace(/"/g, '');
+}
+
+function playTrackByIndex(idx) {
+  var t = window._tracks && window._tracks[idx];
+  if (!t || !t.url) { window.xyrexToast('URL lagu tidak tersedia', 'error'); return; }
+
+  // Simpan state dengan owner = username yang lagi login
+  var currentUser = localStorage.getItem('xyrex_user') || '';
+  localStorage.removeItem('xyrex_player');
+  localStorage.setItem('xyrex_player', JSON.stringify({
+    url: t.url,
+    title: t.title,
+    artist: t.artist,
+    artwork: t.artwork,
+    time: 0,
+    playing: true,
+    owner: currentUser,
+    savedAt: Date.now()
+  }));
+
+  if (window.XYP_REFRESH) {
+    window.XYP_REFRESH();
+  } else {
+    setTimeout(function() { window.location.reload(); }, 300);
+  }
+}
+
+function openYouTube(title, artist) {
+  var q = encodeURIComponent(title + ' ' + artist);
+  window.open('https://www.youtube.com/results?search_query=' + q, '_blank');
+}
+
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') searchMusic();
+});
+
+window.addEventListener('load', function() { setTimeout(loadTrending, 300); });
+</script>
+
+</body>
+</html>

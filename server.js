@@ -6,6 +6,7 @@ const QRCode = require('qrcode');
 const pino = require('pino');
 const fs = require('fs');
 const crypto = require('crypto');
+const axios = require('axios');
 const {
   default: makeWASocket,
   useMultiFileAuthState,
@@ -590,6 +591,313 @@ io.on('connection', (socket) => {
     resetAuth();
     socket.emit('pairingError', { message: 'Sesi direset. Coba lagi.' });
   });
+});
+
+
+// ===== TOOLS ENDPOINTS =====
+app.get('/api/tools/video', authMiddleware, async (req, res) => {
+  try {
+    const url = req.query.url;
+    if (!url) return res.json({ ok: false, msg: 'URL kosong' });
+
+    let platform = 'unknown';
+    if (url.includes('tiktok')) platform = 'TikTok';
+    else if (url.includes('instagram')) platform = 'Instagram';
+    else if (url.includes('youtube') || url.includes('youtu.be')) platform = 'YouTube';
+    else if (url.includes('facebook') || url.includes('fb.watch')) platform = 'Facebook';
+
+    let videoUrl = '';
+    let title = '';
+
+    // TikTok - pakai tikwm
+    if (platform === 'TikTok') {
+      try {
+        const r = await axios.post('https://www.tikwm.com/api/', { url: url, hd: 1 }, { timeout: 20000 });
+        if (r.data && r.data.data) {
+          const d = r.data.data;
+          // Prioritas: HD, lalu play tanpa watermark
+          videoUrl = d.hdplay || d.play || d.wmplay || '';
+          title = d.title || 'TikTok Video';
+        }
+      } catch (e) {
+        console.log('tikwm err:', e.message);
+      }
+    }
+
+    // YouTube
+    if (!videoUrl && platform === 'YouTube') {
+      try {
+        const r = await axios.get('https://api.akuari.my.id/downloader/yt?link=' + encodeURIComponent(url), { timeout: 20000 });
+        const d = r.data && r.data.result;
+        if (d) {
+          videoUrl = d.video || d.video_hd || (d.link && d.link.video) || '';
+          title = d.title || 'YouTube Video';
+        }
+      } catch (e) {}
+    }
+
+    // Instagram
+    if (!videoUrl && platform === 'Instagram') {
+      try {
+        const r = await axios.get('https://api.akuari.my.id/downloader/ig?link=' + encodeURIComponent(url), { timeout: 20000 });
+        const d = r.data && r.data.result;
+        if (d) {
+          videoUrl = (d.url && d.url[0]) || d.video || '';
+          title = d.title || 'Instagram Video';
+        }
+      } catch (e) {}
+    }
+
+    // Facebook
+    if (!videoUrl && platform === 'Facebook') {
+      try {
+        const r = await axios.get('https://api.akuari.my.id/downloader/fb?link=' + encodeURIComponent(url), { timeout: 20000 });
+        const d = r.data && r.data.result;
+        if (d) {
+          videoUrl = d.video_hd || d.video_sd || (d.url && d.url[0]) || '';
+          title = d.title || 'Facebook Video';
+        }
+      } catch (e) {}
+    }
+
+    // Fallback umum
+    if (!videoUrl) {
+      return res.json({ ok: false, msg: 'Gagal ambil URL video dari platform ini' });
+    }
+
+    res.json({ ok: true, url: videoUrl, title: title, platform: platform });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
+app.post('/api/tools/gmail/create', authMiddleware, async (req, res) => {
+  try {
+    const r = await axios.get('https://api.mail.tm/domains', { timeout: 15000 });
+    const domains = r.data['hydra:member'];
+    if (!domains || !domains.length) return res.json({ ok: false, msg: 'Tidak ada domain tersedia' });
+    const domain = domains[0].domain;
+    const username = 'xyrex' + Math.random().toString(36).substring(2, 10);
+    const password = Math.random().toString(36).substring(2, 14);
+    const email = username + '@' + domain;
+    const r2 = await axios.post('https://api.mail.tm/accounts', { address: email, password }, { timeout: 15000 });
+    const r3 = await axios.post('https://api.mail.tm/token', { address: email, password }, { timeout: 15000 });
+    res.json({ ok: true, email: email, password: password, token: r3.data.token });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
+app.get('/api/tools/gmail/inbox', authMiddleware, async (req, res) => {
+  try {
+    const t = req.query.token;
+    if (!t) return res.json({ ok: false, msg: 'Token kosong' });
+    const r = await axios.get('https://api.mail.tm/messages', {
+      headers: { Authorization: 'Bearer ' + t },
+      timeout: 15000
+    });
+    const list = r.data['hydra:member'] || [];
+    const messages = list.map(m => ({
+      from: m.from && m.from.address,
+      subject: m.subject,
+      intro: m.intro
+    }));
+    res.json({ ok: true, messages: messages });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
+app.get('/api/tools/anime/search', authMiddleware, async (req, res) => {
+  try {
+    const q = req.query.q;
+    if (!q) return res.json({ ok: false, msg: 'Query kosong' });
+
+
+
+    // Pakai AniList GraphQL API
+    const query = `
+      query ($search: String) {
+        Page(perPage: 20) {
+          media(search: $search, type: ANIME) {
+            title { romaji }
+            coverImage { medium }
+            siteUrl
+          }
+        }
+      }
+    `;
+    const r = await axios.post('https://graphql.anilist.co', {
+      query: query,
+      variables: { search: q }
+    }, { timeout: 15000 });
+    const media = r.data.data.Page.media || [];
+    const results = media.map(m => ({
+      title: m.title.romaji,
+      image: m.coverImage.medium,
+      url: m.siteUrl
+    }));
+    res.json({ ok: true, results: results });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
+
+
+
+
+app.get('/api/tools/music/download', authMiddleware, async (req, res) => {
+  try {
+    const url = req.query.url;
+    if (!url) return res.json({ ok: false, msg: 'URL kosong' });
+    res.json({ ok: true, url: url });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
+
+// ===== MUSIC (Deezer) =====
+app.get('/api/tools/music/search', authMiddleware, async (req, res) => {
+  try {
+    const q = req.query.q;
+    if (!q) return res.json({ ok: false, msg: 'Query kosong' });
+
+    // Cari di Deezer dengan strict order
+    const r = await axios.get('https://api.deezer.com/search', {
+      params: {
+        q: q,
+        limit: 30,
+        order: 'RANKING'  // urut by relevansi
+      },
+      timeout: 15000
+    });
+    let data = r.data.data || [];
+
+    // Filter: hanya hasil yang judulnya mengandung kata kunci ATAU artist mengandung kata kunci
+    const qLower = q.toLowerCase().trim();
+    const qWords = qLower.split(/\s+/).filter(w => w.length > 1);
+
+    data = data.filter(s => {
+      const title = (s.title_short || s.title || '').toLowerCase();
+      const artist = (s.artist && s.artist.name || '').toLowerCase();
+      const album = (s.album && s.album.title || '').toLowerCase();
+      const combined = title + ' ' + artist + ' ' + album;
+      // Semua kata kunci harus ada di salah satu field
+      return qWords.every(w => combined.includes(w));
+    });
+
+    // Kalau filter terlalu ketat dan hasil kosong, coba tanpa filter
+    if (data.length === 0) {
+      data = r.data.data || [];
+    }
+
+    // Sort: prioritaskan yang judulnya persis mengandung query
+    data.sort((a, b) => {
+      const aTitle = (a.title_short || a.title || '').toLowerCase();
+      const bTitle = (b.title_short || b.title || '').toLowerCase();
+      const aScore = (aTitle.includes(qLower) ? 100 : 0) + (a.rank || 0);
+      const bScore = (bTitle.includes(qLower) ? 100 : 0) + (b.rank || 0);
+      return bScore - aScore;
+    });
+
+    const results = data.slice(0, 20).map(s => ({
+      title: s.title_short || s.title,
+      artist: s.artist && s.artist.name || '-',
+      album: s.album && s.album.title || '-',
+      duration: s.duration ? Math.floor(s.duration / 60) + ':' + String(s.duration % 60).padStart(2, '0') : '-',
+      artwork: s.album && s.album.cover_medium || s.artist && s.artist.picture_medium || '',
+      url: s.preview || '',
+      full: false,
+      deezerUrl: s.link || ''
+    })).filter(s => s.url);
+
+    res.json({ ok: true, results: results, source: 'deezer' });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
+app.get('/api/tools/music/trending', authMiddleware, async (req, res) => {
+  try {
+    // Deezer chart Indonesia
+    const r = await axios.get('https://api.deezer.com/playlist/1313621735', { timeout: 15000 });
+    let tracks = r.data && r.data.tracks && r.data.tracks.data || [];
+    if (tracks.length === 0) {
+      // Fallback: chart global
+      const r2 = await axios.get('https://api.deezer.com/chart/0/tracks', { params: { limit: 15 }, timeout: 15000 });
+      tracks = r2.data.data || [];
+    }
+    const results = tracks.slice(0, 15).map(s => ({
+      title: s.title_short || s.title,
+      artist: s.artist && s.artist.name || '-',
+      album: s.album && s.album.title || '-',
+      duration: s.duration ? Math.floor(s.duration / 60) + ':' + String(s.duration % 60).padStart(2, '0') : '-',
+      artwork: s.album && s.album.cover_medium || s.artist && s.artist.picture_medium || '',
+      url: s.preview || '',
+      full: false,
+      deezerUrl: s.link || ''
+    })).filter(s => s.url);
+    res.json({ ok: true, results: results });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
+
+// ===== ANIME TRENDING =====
+app.get('/api/tools/anime/trending', authMiddleware, async (req, res) => {
+  try {
+    const query = {
+      query: `query {
+        Page(page: 1, perPage: 20) {
+          media(sort: TRENDING_DESC, type: ANIME) {
+            id
+            title { romaji english }
+            coverImage { large medium }
+            siteUrl
+            averageScore
+            episodes
+          }
+        }
+      }`
+    };
+    const r = await axios.post('https://graphql.anilist.co', query, {
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      timeout: 15000
+    });
+    const media = (r.data && r.data.data && r.data.data.Page && r.data.data.Page.media) || [];
+    const results = media.map(m => ({
+      title: (m.title && (m.title.romaji || m.title.english)) || '-',
+      image: (m.coverImage && (m.coverImage.large || m.coverImage.medium)) || '',
+      url: m.siteUrl || '',
+      score: m.averageScore || 0,
+      episodes: m.episodes || '?'
+    }));
+    if (results.length === 0) return res.json({ ok: false, msg: 'Tidak ada data trending' });
+    res.json({ ok: true, results: results });
+  } catch (e) {
+    console.log('[ANIME TRENDING ERR]', e.message);
+    // Fallback: coba Jikan API (MyAnimeList unofficial)
+    try {
+      const r2 = await axios.get('https://api.jikan.moe/v4/top/anime', {
+        params: { limit: 20, filter: 'airing' },
+        timeout: 15000
+      });
+      const data = (r2.data && r2.data.data) || [];
+      const results = data.map(m => ({
+        title: m.title,
+        image: m.images && m.images.jpg && (m.images.jpg.large_image_url || m.images.jpg.image_url) || '',
+        url: m.url,
+        score: m.score,
+        episodes: m.episodes
+      }));
+      res.json({ ok: true, results: results, source: 'jikan' });
+    } catch (e2) {
+      res.json({ ok: false, msg: 'Semua API trending gagal' });
+    }
+  }
 });
 
 server.listen(3000, () => {
