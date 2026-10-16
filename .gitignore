@@ -1,0 +1,29 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Auth & session
+auth/
+tokens.json
+users.json
+chatlog.json
+*.bak
+*.broken
+
+# Build & cache
+.gradle/
+build/
+.gradle/
+.DS_Store
+
+# Upload
+uploads/
+
+# Env
+.env
+.env.local
+
+# OS
+Thumbs.db
+*.log
