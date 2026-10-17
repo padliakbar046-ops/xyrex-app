@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<title>XYREX - WiFi Killer</title>
+<link rel="stylesheet" href="/style.css"/>
+<style>
+ .wk-wrap{max-width:820px;margin:24px auto;padding:16px;font-family:system-ui}
+ .wk-row{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap}
+ .wk-row input,.wk-row select,.wk-row button{padding:8px 10px;border:2px solid #000;background:#fff}
+ .wk-log{background:#000;color:#0f0;font-family:monospace;height:320px;overflow:auto;padding:10px;border:2px solid #000;white-space:pre-wrap;font-size:12px}
+ .wk-badge{display:inline-block;padding:2px 8px;border:2px solid #000;margin-right:6px}
+</style>
+</head>
+<body>
+<div class="wk-wrap">
+  <h2>WiFi Killer</h2>
+  <div class="wk-row"><span class="wk-badge" id="wk-caps">memuat caps...</span></div>
+  <div class="wk-row">
+    <select id="wk-iface"></select>
+    <select id="wk-mode">
+      <option value="deauth">deauth</option>
+      <option value="disassoc">disassoc</option>
+      <option value="beacon">beacon flood</option>
+      <option value="auth">auth flood</option>
+    </select>
+    <input id="wk-bssid" placeholder="BSSID target (xx:xx:xx:xx:xx:xx)"/>
+    <input id="wk-channel" placeholder="channel" size="6"/>
+  </div>
+  <div class="wk-row">
+    <input id="wk-ssid" placeholder="SSID palsu (beacon)"/>
+    <input id="wk-count" placeholder="count (0=inf)" size="10"/>
+    <input id="wk-duration" placeholder="durasi detik" size="10"/>
+    <button id="wk-start">START</button>
+    <button id="wk-stop">STOP</button>
+  </div>
+  <div class="wk-log" id="wk-log"></div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const $ = (id)=>document.getElementById(id);
+const log = (s)=>{ const el=$('wk-log'); el.textContent += s + '\n'; el.scrollTop = el.scrollHeight; };
+let sessionId = null;
+const sock = io();
+
+async function loadInfo(){
+  try{
+    const r = await fetch('/api/tools/wifi-killer/info', {credentials:'include'});
+    const d = await r.json();
+    if(!d.ok) return log('[info] gagal: ' + (d.error||''));
+    $('wk-caps').textContent = 'caps: ' + JSON.stringify(d.capabilities);
+    $('wk-iface').innerHTML = (d.interfaces||[]).map(i=>'<option>'+i+'</option>').join('') || '<option>(none)</option>';
+  }catch(e){ log('[info] '+e.message); }
+}
+
+$('wk-start').onclick = async ()=>{
+  const body = {
+    mode: $('wk-mode').value,
+    iface: $('wk-iface').value,
+    bssid: $('wk-bssid').value.trim(),
+    channel: $('wk-channel').value.trim() || undefined,
+    ssid: $('wk-ssid').value.trim() || undefined,
+    count: $('wk-count').value.trim() ? Number($('wk-count').value) : undefined,
+    duration: $('wk-duration').value.trim() ? Number($('wk-duration').value) : undefined
+  };
+  const r = await fetch('/api/tools/wifi-killer/start', {
+    method:'POST', headers:{'content-type':'application/json'},
+    credentials:'include', body: JSON.stringify(body)
+  });
+  const d = await r.json();
+  if(!d.ok) return log('[start] gagal: ' + (d.error||''));
+  sessionId = d.id;
+  sock.emit('wifi-killer:join', sessionId);
+  log('[start] session ' + sessionId);
+};
+
+$('wk-stop').onclick = async ()=>{
+  if(!sessionId) return;
+  const r = await fetch('/api/tools/wifi-killer/stop', {
+    method:'POST', headers:{'content-type':'application/json'},
+    credentials:'include', body: JSON.stringify({id: sessionId})
+  });
+  const d = await r.json();
+  log('[stop] ' + JSON.stringify(d));
+};
+
+sock.on('wifi-killer:log', (p)=>{ if(p && p.id===sessionId) log(p.line); });
+sock.on('wifi-killer:exit', (p)=>{ if(p && p.id===sessionId){ log('[exit] ' + JSON.stringify(p.info)); sessionId=null; }});
+
+loadInfo();
+</script>
+</body>
+</html>

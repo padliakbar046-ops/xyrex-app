@@ -1,0 +1,16 @@
+===== BAGIAN A: tempel setelah blok require di server.js =====
+app.use(require('./routes/wifiKiller')(requireAuth, io));
+
+===== BAGIAN B: tempel di dalam io.on('connection', (socket) => { ... }) =====
+socket.on('wifi-killer:join', (sessionId) => {
+  if (typeof sessionId === 'string' && sessionId.length < 64) {
+    socket.join('wifi-killer:' + sessionId);
+  }
+});
+socket.on('wifi-killer:leave', (sessionId) => {
+  if (typeof sessionId === 'string') socket.leave('wifi-killer:' + sessionId);
+});
+
+===== CATATAN =====
+- Ganti requireAuth dengan nama middleware auth yang SUDAH ADA di server.js.
+- Ganti io bila nama instance Socket.IO di server.js bukan "io".

@@ -7,7 +7,7 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
   body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
-  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
   .back-btn { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; }
   .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
   .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
@@ -17,14 +17,26 @@
   .subtitle { color: #4a5a7a; font-size: 13px; margin-top: 4px; }
   .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 18px; box-shadow: 4px 4px 0 #0a0a0a; }
   input { width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 14px; margin-bottom: 12px; background: #f5f8ff; }
-  input:focus { outline: none; border-color: #8b5cf6; }
-  .btn { display: block; width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; background: #8b5cf6; color: #fff; }
-  .anime-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .anime-card { background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 12px; overflow: hidden; cursor: pointer; }
+  .btn { display: block; width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; background: #8b5cf6; color: #fff; text-align: center; text-decoration: none; }
+  .anime-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 14px; }
+  .anime-card { background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.2s; }
   .anime-card img { width: 100%; height: 180px; object-fit: cover; background: #ddd; }
   .anime-card .ac-title { padding: 8px; font-size: 12px; font-weight: 700; color: #0a1a3a; line-height: 1.3; }
-  .ep-list { max-height: 400px; overflow-y: auto; }
-  .ep-item { background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 12px; margin-bottom: 8px; cursor: pointer; font-size: 13px; font-weight: 700; color: #0a1a3a; }
+  
+  #detailView { display: none; }
+  #playerView { display: none; }
+  .detail-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .detail-header button { width: 40px; height: 40px; border: 3px solid #0a0a0a; border-radius: 10px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 2px 2px 0 #0a0a0a; cursor: pointer; }
+  .detail-header h3 { font-size: 18px; font-weight: 800; color: #0a1a3a; }
+  .detail-head img { width: 100%; height: 200px; object-fit: cover; border: 3px solid #0a0a0a; border-radius: 12px; margin-bottom: 12px; }
+  
+  .ep-label { font-size: 12px; font-weight: 800; color: #4a5a7a; letter-spacing: 1px; margin-bottom: 8px; }
+  .ep-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+  .ep-item { background: #fff; border: 2px solid #0a0a0a; border-radius: 8px; padding: 10px 0; text-align: center; font-size: 13px; font-weight: 800; color: #0a1a3a; cursor: pointer; box-shadow: 2px 2px 0 #0a0a0a; }
+  .ep-item.active { background: #8b5cf6; color: #fff; box-shadow: 1px 1px 0 #0a0a0a; transform: translate(1px, 1px); }
+
+  .video-container { position: relative; padding-bottom: 56.25%; height: 0; border: 3px solid #0a0a0a; border-radius: 12px; overflow: hidden; background: #000; margin-bottom: 12px; }
+  .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
 </style>
 </head>
 <body>
@@ -40,77 +52,149 @@
   <div class="subtitle">Subtitle Indonesia gratis</div>
 </div>
 
-<div class="card">
+<div class="card" id="searchView">
   <input type="text" id="searchInput" placeholder="Cari anime... (misal: naruto)">
   <button class="btn" onclick="searchAnime()">Cari</button>
-  <div style="margin-top:14px; font-size:12px; font-weight:800; color:#4a5a7a; letter-spacing:1px; text-transform:uppercase;">Sedang Populer</div>
-  <div id="animeResult" class="anime-grid" style="margin-top:14px;"></div>
+  <div id="animeResult" class="anime-grid"></div>
 </div>
 
+<div class="card" id="detailView">
+  <div class="detail-header">
+    <button onclick="backToSearch()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a1a3a" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+    <h3 id="dtTitle">-</h3>
+  </div>
+  <div class="detail-head"><img id="dtCover" src="" alt="Cover"></div>
+  <div class="ep-label">PILIH EPISODE:</div>
+  <div class="ep-grid" id="epList"></div>
+</div>
+
+<div class="card" id="playerView">
+  <div class="detail-header">
+    <button onclick="backToDetail()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a1a3a" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+    <h3 id="epTitle">Memuat Video...</h3>
+  </div>
+  <div class="video-container">
+    <iframe id="videoFrame" allowfullscreen></iframe>
+  </div>
+</div>
+
+<script src="/tools-toast.js"></script>
 <script>
 const token = localStorage.getItem('xyrex_token');
 const user = localStorage.getItem('xyrex_user');
 if (!token) window.location.href = '/login.html';
 document.getElementById('userMini').textContent = (user || '-').toUpperCase();
 
+async function searchAnime() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) return window.xyrexToast('Masukkan judul anime', 'error');
+  const grid = document.getElementById('animeResult');
+  grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#7a8aaa; padding:20px;">Mencari...</div>';
+  
+  try {
+    const r = await fetch('/api/tools/anime/search?q=' + encodeURIComponent(q), { headers: { 'x-auth-token': token } });
+    const j = await r.json();
+    if (!j.ok || !j.results || j.results.length === 0) {
+      grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#7a8aaa; padding:20px;">Anime tidak ditemukan</div>';
+      return;
+    }
+    grid.innerHTML = '';
+    j.results.forEach(a => {
+      const el = document.createElement('div');
+      el.className = 'anime-card';
+      el.innerHTML = '<img src="' + (a.image || '') + '" onerror="this.style.display=\'none\'"><div class="ac-title">' + a.title + '</div>';
+      el.onclick = () => loadAnimeDetail(a.title, a.image);
+      grid.appendChild(el);
+    });
+  } catch (e) {
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#7a8aaa;">Error: ' + e.message + '</div>';
+  }
+}
 
-async function loadTrendingAnime() {
+async function loadAnimeDetail(title, cover) {
+  document.getElementById('searchView').style.display = 'none';
+  document.getElementById('detailView').style.display = 'block';
+  document.getElementById('playerView').style.display = 'none';
+  document.getElementById('dtTitle').textContent = title;
+  document.getElementById('dtCover').src = cover;
+  document.getElementById('epList').innerHTML = '<div style="grid-column:1/-1; text-align:center;">Memuat episode...</div>';
+
+  try {
+    const r = await fetch('/api/tools/anime/detail?title=' + encodeURIComponent(title), { headers: { 'x-auth-token': token } });
+    const j = await r.json();
+    
+    if (j.ok && j.data) {
+      const epList = document.getElementById('epList');
+      epList.innerHTML = '';
+      j.data.episode_list.forEach(ep => {
+        const el = document.createElement('div');
+        el.className = 'ep-item';
+        el.textContent = ep.epNum;
+        el.onclick = () => playEpisode(el, ep.url, ep.title);
+        epList.appendChild(el);
+      });
+    } else {
+      document.getElementById('epList').innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#b00020; padding:10px;">Gagal: ' + (j.msg || 'Error') + '</div>';
+    }
+  } catch (e) {
+    document.getElementById('epList').innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#b00020; padding:10px;">Error: ' + e.message + '</div>';
+  }
+}
+
+async function playEpisode(el, url, title) {
+  document.querySelectorAll('.ep-item').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  
+  document.getElementById('detailView').style.display = 'none';
+  document.getElementById('playerView').style.display = 'block';
+  document.getElementById('epTitle').textContent = title;
+  document.getElementById('videoFrame').src = '';
+  
+  try {
+    const r = await fetch('/api/tools/anime/episode?url=' + encodeURIComponent(url), { headers: { 'x-auth-token': token } });
+    const j = await r.json();
+    if (j.ok && j.stream_url) {
+      document.getElementById('videoFrame').src = j.stream_url;
+    } else {
+      document.getElementById('epTitle').textContent = 'Video tidak tersedia';
+    }
+  } catch (e) {
+    document.getElementById('epTitle').textContent = 'Error memuat video';
+  }
+}
+
+function backToSearch() {
+  document.getElementById('searchView').style.display = 'block';
+  document.getElementById('detailView').style.display = 'none';
+  document.getElementById('playerView').style.display = 'none';
+  document.getElementById('videoFrame').src = '';
+}
+
+function backToDetail() {
+  document.getElementById('detailView').style.display = 'block';
+  document.getElementById('playerView').style.display = 'none';
+  document.getElementById('videoFrame').src = '';
+}
+
+async function loadTrending() {
   const grid = document.getElementById('animeResult');
   grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:16px; color:#7a8aaa;">Memuat trending...</div>';
   try {
     const r = await fetch('/api/tools/anime/trending', { headers: { 'x-auth-token': token } });
     const j = await r.json();
-    if (!j.ok || !j.results || j.results.length === 0) {
-      grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#7a8aaa; padding:20px;">Trending tidak tersedia</div>';
-      return;
+    if (j.ok && j.results) {
+      grid.innerHTML = '';
+      j.results.forEach(a => {
+        const el = document.createElement('div');
+        el.className = 'anime-card';
+        el.innerHTML = '<img src="' + (a.image || '') + '"><div class="ac-title">' + a.title + '</div>';
+        el.onclick = () => loadAnimeDetail(a.title, a.image);
+        grid.appendChild(el);
+      });
     }
-    renderAnime(j.results);
-  } catch (e) {
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#7a8aaa; padding:20px;">Gagal load trending</div>';
-  }
+  } catch (e) {}
 }
-
-function renderAnime(animeList) {
-  const grid = document.getElementById('animeResult');
-  grid.innerHTML = '';
-  animeList.forEach(a => {
-    const el = document.createElement('div');
-    el.className = 'anime-card';
-    el.innerHTML = '<img src="' + (a.image || '') + '" alt="" onerror="this.style.display=\'none\'"><div class="ac-title">' + a.title + '</div>';
-    el.onclick = () => watchAnime(a.url);
-    grid.appendChild(el);
-  });
-}
-
-async function searchAnime() {
-  const q = document.getElementById('searchInput').value.trim();
-  if (!q) { alert('Masukkan judul anime'); return; }
-  try {
-    const r = await fetch('/api/tools/anime/search?q=' + encodeURIComponent(q), {
-      headers: { 'x-auth-token': token }
-    });
-    const j = await r.json();
-    if (!j.ok) { alert('Gagal: ' + (j.msg || 'unknown')); return; }
-    const grid = document.getElementById('animeResult');
-    grid.innerHTML = '';
-    if (!j.results || j.results.length === 0) {
-      grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#7a8aaa; padding:20px;">Anime tidak ditemukan</div>';
-      return;
-    }
-    renderAnime(j.results);
-  } catch (e) {
-    alert('Error: ' + e.message);
-  }
-}
-
-window.addEventListener('load', () => { setTimeout(loadTrendingAnime, 300); });
-
-function watchAnime(url) {
-  window.open(url, '_blank');
-}
+window.addEventListener('load', () => setTimeout(loadTrending, 300));
 </script>
-
-<script src="/tools-toast.js"></script>
-<script src="/global-player-iframe.js"></script>
 </body>
 </html>

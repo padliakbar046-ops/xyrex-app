@@ -1,0 +1,444 @@
+=== BAGIAN 9 dari 10 ===
+JANGAN EKSEKUSI DULU. Tunggu sampai semua 10 bagian masuk.
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - Video Downloader</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .back-btn { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 28px; font-weight: 800; color: #0a1a3a; }
+  .title span { color: #ff0050; }
+  .subtitle { color: #4a5a7a; font-size: 13px; margin-top: 4px; }
+  .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 18px; box-shadow: 4px 4px 0 #0a0a0a; }
+  input { width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 14px; margin-bottom: 12px; background: #f5f8ff; }
+  input:focus { outline: none; border-color: #ff0050; }
+  label { display: block; font-weight: 700; color: #0a1a3a; margin-bottom: 8px; font-size: 13px; }
+  .btn { display: block; width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .btn-primary { background: #ff0050; color: #fff; }
+  .btn-dl { background: #25d366; color: #fff; text-decoration: none; display: block; text-align: center; margin-top: 8px; }
+  .result { display: none; margin-top: 14px; }
+  .result.show { display: block; }
+  .result video { width: 100%; border-radius: 12px; border: 3px solid #0a0a0a; margin-bottom: 10px; background: #000; }
+  .result .info { font-size: 12px; color: #4a5a7a; margin-bottom: 10px; line-height: 1.5; }
+  .info-box { background: #fff3cd; border: 2px solid #856404; border-radius: 10px; padding: 12px; font-size: 12px; color: #856404; margin-bottom: 12px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/tools.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
+  <div class="brand">Video Downloader</div>
+  <div class="user-mini" id="userMini">-</div>
+</div>
+
+<div class="title-wrap">
+  <div class="title">Video <span>Downloader</span></div>
+  <div class="subtitle">Tanpa watermark - TikTok, IG, YT, FB</div>
+</div>
+
+<div class="card">
+  <label>Link Video</label>
+  <input type="text" id="videoUrl" placeholder="https://www.tiktok.com/@user/video/xxxxx">
+  <button class="btn btn-primary" onclick="download()">Download</button>
+  <div class="info-box">Support: TikTok, Instagram, YouTube, Facebook, Twitter/X.</div>
+  <div style="margin-top:14px; font-size:12px; font-weight:800; color:#4a5a7a; letter-spacing:1px; text-transform:uppercase;">Platform Support</div>
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; margin-top:10px;">
+    <div style="background:#f5f8ff; border:2px solid #0a0a0a; border-radius:12px; padding:12px; text-align:center;">
+      <div style="font-weight:800; color:#0a1a3a; font-size:13px;">TikTok</div>
+      <div style="font-size:11px; color:#4a5a7a; margin-top:2px;">No watermark</div>
+    </div>
+    <div style="background:#f5f8ff; border:2px solid #0a0a0a; border-radius:12px; padding:12px; text-align:center;">
+      <div style="font-weight:800; color:#0a1a3a; font-size:13px;">Instagram</div>
+      <div style="font-size:11px; color:#4a5a7a; margin-top:2px;">Reels / Post</div>
+    </div>
+    <div style="background:#f5f8ff; border:2px solid #0a0a0a; border-radius:12px; padding:12px; text-align:center;">
+      <div style="font-weight:800; color:#0a1a3a; font-size:13px;">YouTube</div>
+      <div style="font-size:11px; color:#4a5a7a; margin-top:2px;">Short / Video</div>
+    </div>
+    <div style="background:#f5f8ff; border:2px solid #0a0a0a; border-radius:12px; padding:12px; text-align:center;">
+      <div style="font-weight:800; color:#0a1a3a; font-size:13px;">Facebook</div>
+      <div style="font-size:11px; color:#4a5a7a; margin-top:2px;">Video / Reels</div>
+    </div>
+  </div>
+  <div id="result" class="result">
+    <video id="videoPlayer" controls></video>
+    <div class="info" id="videoInfo"></div>
+    <a id="dlLink" class="btn btn-dl" href="#" download>Download Video</a>
+  </div>
+</div>
+
+<script>
+const token = localStorage.getItem('xyrex_token');
+const user = localStorage.getItem('xyrex_user');
+if (!token) window.location.href = '/login.html';
+document.getElementById('userMini').textContent = (user || '-').toUpperCase();
+
+async function download() {
+  const url = document.getElementById('videoUrl').value.trim();
+  if (!url) { window.xyrexToast('Isi link video dulu', 'error'); return; }
+  const result = document.getElementById('result');
+  result.classList.remove('show');
+
+  const btn = document.querySelector('.btn-primary');
+  btn.textContent = 'Memproses...';
+  btn.disabled = true;
+
+  try {
+    const r = await fetch('/api/tools/video?url=' + encodeURIComponent(url), {
+      headers: { 'x-auth-token': token }
+    });
+    const j = await r.json();
+    if (!j.ok) {
+      window.xyrexToast('Gagal: ' + (j.msg || 'unknown'), 'error');
+      btn.textContent = 'Download';
+      btn.disabled = false;
+      return;
+    }
+
+    const player = document.getElementById('videoPlayer');
+    player.src = j.url;
+    player.load();
+    player.onerror = () => {
+      window.xyrexToast('Video gagal di-load di player. Coba tombol download.', 'error');
+    };
+    document.getElementById('videoInfo').textContent = 'Judul: ' + (j.title || '-') + ' | Platform: ' + (j.platform || '-');
+    const dl = document.getElementById('dlLink');
+    dl.href = j.url;
+    dl.setAttribute('download', 'video_' + Date.now() + '.mp4');
+    dl.setAttribute('target', '_blank');
+    result.classList.add('show');
+    btn.textContent = 'Download';
+    btn.disabled = false;
+  } catch (e) {
+    window.xyrexToast('Error: ' + e.message, 'error');
+    btn.textContent = 'Download';
+    btn.disabled = false;
+  }
+}
+</script>
+
+<script src="/tools-toast.js"></script>
+<script src="/global-player-iframe.js"></script>
+</body>
+</html>
+
+===== FILE: public/tools-gmail.html =====
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - Gmail Sementara</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; }
+  .back-btn { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 28px; font-weight: 800; color: #0a1a3a; }
+  .title span { color: #ea4335; }
+  .subtitle { color: #4a5a7a; font-size: 13px; margin-top: 4px; }
+  .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 18px; box-shadow: 4px 4px 0 #0a0a0a; }
+  .btn { display: block; width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; margin-bottom: 10px; }
+  .btn-primary { background: #ea4335; color: #fff; }
+  .btn-secondary { background: #1a5fd6; color: #fff; }
+  .email-display { background: #f5f8ff; border: 3px solid #0a0a0a; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 800; color: #0a1a3a; word-break: break-all; text-align: center; margin-bottom: 12px; user-select: all; }
+  .msg-list { max-height: 400px; overflow-y: auto; }
+  .msg-item { background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .msg-item .from { font-weight: 800; color: #ea4335; font-size: 12px; }
+  .msg-item .subj { font-weight: 700; color: #0a1a3a; font-size: 14px; margin-top: 4px; }
+  .msg-item .body { font-size: 12px; color: #4a5a7a; margin-top: 6px; line-height: 1.5; white-space: pre-wrap; }
+  .status { font-size: 12px; color: #4a5a7a; text-align: center; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/tools.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
+  <div class="brand">Gmail Sementara</div>
+  <div class="user-mini" id="userMini">-</div>
+</div>
+
+<div class="title-wrap">
+  <div class="title">Gmail <span>Sementara</span></div>
+  <div class="subtitle">Email sekali pakai, otomatis hapus</div>
+</div>
+
+<div class="card">
+  <button class="btn btn-primary" onclick="generateEmail()">Generate Email</button>
+  <div id="emailBox" style="display:none;">
+    <div class="email-display" id="emailDisplay">-</div>
+    <button class="btn btn-secondary" onclick="refreshInbox()">Refresh Inbox</button>
+    <div class="msg-list" id="msgList"></div>
+    <div class="status" id="status">-</div>
+  </div>
+</div>
+
+<script>
+const token = localStorage.getItem('xyrex_token');
+const user = localStorage.getItem('xyrex_user');
+if (!token) window.location.href = '/login.html';
+document.getElementById('userMini').textContent = (user || '-').toUpperCase();
+
+let currentEmail = '';
+let currentPass = '';
+let currentToken = '';
+
+async function generateEmail() {
+  try {
+    const r = await fetch('/api/tools/gmail/create', {
+      method: 'POST',
+      headers: { 'x-auth-token': token }
+    });
+    const j = await r.json();
+    if (!j.ok) { alert('Gagal: ' + (j.msg || 'unknown')); return; }
+    currentEmail = j.email;
+    currentPass = j.password;
+    currentToken = j.token;
+    document.getElementById('emailDisplay').textContent = currentEmail;
+    document.getElementById('emailBox').style.display = 'block';
+    document.getElementById('status').textContent = 'Menunggu email masuk...';
+    document.getElementById('msgList').innerHTML = '';
+    setInterval(refreshInbox, 10000);
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+async function refreshInbox() {
+  if (!currentToken) return;
+  try {
+    const r = await fetch('/api/tools/gmail/inbox?token=' + encodeURIComponent(currentToken), {
+      headers: { 'x-auth-token': token }
+    });
+    const j = await r.json();
+    if (!j.ok) return;
+    const list = document.getElementById('msgList');
+    list.innerHTML = '';
+    if (!j.messages || j.messages.length === 0) {
+      list.innerHTML = '<div style="text-align:center; color:#7a8aaa; padding:16px;">Belum ada email</div>';
+      return;
+    }
+    j.messages.forEach(m => {
+      const el = document.createElement('div');
+      el.className = 'msg-item';
+      el.innerHTML = '<div class="from">' + (m.from || '-') + '</div><div class="subj">' + (m.subject || '-') + '</div><div class="body">' + (m.intro || '-') + '</div>';
+      list.appendChild(el);
+    });
+    document.getElementById('status').textContent = j.messages.length + ' email diterima';
+  } catch (e) {}
+}
+</script>
+
+<script src="/tools-toast.js"></script>
+<script src="/global-player-iframe.js"></script>
+</body>
+</html>
+
+===== FILE: public/tools-anime.html =====
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - Nonton Anime</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; }
+  .back-btn { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 28px; font-weight: 800; color: #0a1a3a; }
+  .title span { color: #8b5cf6; }
+  .subtitle { color: #4a5a7a; font-size: 13px; margin-top: 4px; }
+  .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 18px; box-shadow: 4px 4px 0 #0a0a0a; }
+  input { width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 14px; margin-bottom: 12px; background: #f5f8ff; }
+  input:focus { outline: none; border-color: #8b5cf6; }
+  .btn { display: block; width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; background: #8b5cf6; color: #fff; }
+  .anime-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .anime-card { background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 12px; overflow: hidden; cursor: pointer; }
+  .anime-card img { width: 100%; height: 180px; object-fit: cover; background: #ddd; }
+  .anime-card .ac-title { padding: 8px; font-size: 12px; font-weight: 700; color: #0a1a3a; line-height: 1.3; }
+  .ep-list { max-height: 400px; overflow-y: auto; }
+  .ep-item { background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 12px; margin-bottom: 8px; cursor: pointer; font-size: 13px; font-weight: 700; color: #0a1a3a; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/tools.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
+  <div class="brand">Nonton Anime</div>
+  <div class="user-mini" id="userMini">-</div>
+</div>
+
+<div class="title-wrap">
+  <div class="title">Nonton <span>Anime</span></div>
+  <div class="subtitle">Subtitle Indonesia gratis</div>
+</div>
+
+<div class="card">
+  <input type="text" id="searchInput" placeholder="Cari anime... (misal: naruto)">
+  <button class="btn" onclick="searchAnime()">Cari</button>
+  <div style="margin-top:14px; font-size:12px; font-weight:800; color:#4a5a7a; letter-spacing:1px; text-transform:uppercase;">Sedang Populer</div>
+  <div id="animeResult" class="anime-grid" style="margin-top:14px;"></div>
+</div>
+
+<script>
+const token = localStorage.getItem('xyrex_token');
+const user = localStorage.getItem('xyrex_user');
+if (!token) window.location.href = '/login.html';
+document.getElementById('userMini').textContent = (user || '-').toUpperCase();
+
+
+async function loadTrendingAnime() {
+  const grid = document.getElementById('animeResult');
+  grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:16px; color:#7a8aaa;">Memuat trending...</div>';
+  try {
+    const r = await fetch('/api/tools/anime/trending', { headers: { 'x-auth-token': token } });
+    const j = await r.json();
+    if (!j.ok || !j.results || j.results.length === 0) {
+      grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#7a8aaa; padding:20px;">Trending tidak tersedia</div>';
+      return;
+    }
+    renderAnime(j.results);
+  } catch (e) {
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#7a8aaa; padding:20px;">Gagal load trending</div>';
+  }
+}
+
+function renderAnime(animeList) {
+  const grid = document.getElementById('animeResult');
+  grid.innerHTML = '';
+  animeList.forEach(a => {
+    const el = document.createElement('div');
+    el.className = 'anime-card';
+    el.innerHTML = '<img src="' + (a.image || '') + '" alt="" onerror="this.style.display=\'none\'"><div class="ac-title">' + a.title + '</div>';
+    el.onclick = () => watchAnime(a.url);
+    grid.appendChild(el);
+  });
+}
+
+async function searchAnime() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) { alert('Masukkan judul anime'); return; }
+  try {
+    const r = await fetch('/api/tools/anime/search?q=' + encodeURIComponent(q), {
+      headers: { 'x-auth-token': token }
+    });
+    const j = await r.json();
+    if (!j.ok) { alert('Gagal: ' + (j.msg || 'unknown')); return; }
+    const grid = document.getElementById('animeResult');
+    grid.innerHTML = '';
+    if (!j.results || j.results.length === 0) {
+      grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#7a8aaa; padding:20px;">Anime tidak ditemukan</div>';
+      return;
+    }
+    renderAnime(j.results);
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+window.addEventListener('load', () => { setTimeout(loadTrendingAnime, 300); });
+
+function watchAnime(url) {
+  window.open(url, '_blank');
+}
+</script>
+
+<script src="/tools-toast.js"></script>
+<script src="/global-player-iframe.js"></script>
+</body>
+</html>
+
+===== FILE: public/tools-music.html =====
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - Music Player</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 100px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .back-btn { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 28px; font-weight: 800; color: #0a1a3a; }
+  .title span { color: #1db954; }
+  .subtitle { color: #4a5a7a; font-size: 13px; margin-top: 4px; }
+  .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 18px; box-shadow: 4px 4px 0 #0a0a0a; }
+  input { width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 14px; margin-bottom: 12px; background: #f5f8ff; }
+  input:focus { outline: none; border-color: #1db954; }
+  .btn { display: block; width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; background: #1db954; color: #fff; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .track-list { margin-top: 14px; }
+  .track-item { background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 12px; padding: 12px; margin-bottom: 10px; display: flex; gap: 12px; align-items: flex-start; }
+  .track-item .cover { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; border: 2px solid #0a0a0a; background: #1db954; flex-shrink: 0; }
+  .track-item .meta { flex: 1; min-width: 0; }
+  .track-item .title { font-size: 13px; font-weight: 800; color: #0a1a3a; line-height: 1.3; }
+  .track-item .artist { font-size: 11px; color: #4a5a7a; margin-top: 3px; line-height: 1.3; }
+  .track-item .actions { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+  .mini-btn { padding: 8px 12px; border: 2px solid #0a0a0a; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; box-shadow: 2px 2px 0 #0a0a0a; text-align: center; width: 100%; }
+  .mini-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .mini-btn.play-btn { background: #1db954; color: #fff; }
+  .mini-btn.yt-btn { background: #ff0000; color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/tools.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
+  <div class="brand">Music Player</div>
+  <div class="user-mini" id="userMini">-</div>
+</div>
+
+<div class="title-wrap">
+  <div class="title">Music <span>Player</span></div>
+  <div class="subtitle">Cari lagu, putar preview + cover art</div>
+</div>
+
+<div class="card">
+  <input type="text" id="searchInput" placeholder="Cari lagu atau artis...">
+  <button class="btn" onclick="searchMusic()">Cari</button>
+  <div style="margin-top:14px; font-size:12px; font-weight:800; color:#4a5a7a; letter-spacing:1px; text-transform:uppercase;" id="listTitle">Sedang Populer</div>
+  <div id="searchResult" class="track-list"></div>
+</div>
+
+<script src="/tools-toast.js"></script>
+<script src="/global-player-iframe.js"></script>
+<script>
+const token = localStorage.getItem('xyrex_token');
+const user = localStorage.getItem('xyrex_user');
+if (!token) window.location.href = '/login.html';
+document.getElementById('userMini').textContent = (user || '-').toUpperCase();
+
+async function searchMusic() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) { window.xyrexToast('Masukkan judul lagu', 'error'); return; }
+  document.getElementById('listTitle').textContent = 'Hasil Pencarian';
+  const list = document.getElementById('searchResult');
+  list.innerHTML = '<div style="text-align:center; padding:16px; color:#7a8aaa;">Mencari...</div>';
+  try {
+    const r = await fetch('/api/tools/music/search?q=' + encodeURIComponent(q), { headers: { 'x-auth-token': token } });
+    const j = await r.json();
+    if (!j.ok || !j.results || j.results.length === 0) {
+      window.xyrexToast('Lagu tidak ditemukan', 'error');
+      list.innerHTML = '<div style="text-align:center; color:#7a8aaa; padding:20px;">Tidak ada hasil</div>';
+      return;
+    }
+    renderTracks(j.results);
+
+=== AKHIR BAGIAN 9 ===

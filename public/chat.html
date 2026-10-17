@@ -2,203 +2,87 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>XYREX - Chat Public</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-  html { height: 100%; }
-  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
-
-  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; flex-shrink: 0; }
-  .hamburger { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #1a5fd6; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; box-shadow: 3px 3px 0 #0a0a0a; }
-  .hamburger:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
-  .hamburger span { display: block; width: 22px; height: 3px; background: #fff; border-radius: 2px; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .back-btn { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; }
   .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
   .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
-
-  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 200; }
-  .overlay.show { display: block; }
-  .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100vh; height: 100dvh; background: #fff; border-right: 3px solid #0a0a0a; z-index: 300; transition: left 0.25s ease; overflow-y: auto; }
-  .sidebar.show { left: 0; }
-  .sidebar-head { background: linear-gradient(135deg, #0a1a3a 0%, #1e3a6e 100%); padding: 22px 18px; border-bottom: 3px solid #0a0a0a; }
-  .sidebar-head .s-title { color: #ffe600; font-size: 22px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 0 10px #ffe600; }
-  .sidebar-head .s-sub { color: #a8b8d8; font-size: 12px; margin-top: 4px; }
-  .sidebar-head .s-user { color: #fff; font-size: 13px; margin-top: 10px; font-weight: 700; }
-  .sidebar-head .s-role { display: inline-block; background: #ffe600; color: #0a1a3a; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; margin-top: 6px; }
-  .menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 2px solid #e0e0e0; cursor: pointer; text-decoration: none; color: #0a1a3a; font-weight: 700; font-size: 15px; }
-  .menu-item:active { background: #f5f8ff; }
-  .menu-item .ico { width: 38px; height: 38px; border: 2px solid #0a0a0a; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #1a5fd6; color: #fff; flex-shrink: 0; }
-  .menu-item.home .ico { background: #0a1a3a; }
-  .menu-item.dev .ico { background: #4db8e8; }
-  .menu-item.own .ico { background: #25d366; }
-  .menu-item.adm .ico { background: #ffe600; color: #0a0a0a; }
-  .menu-item.out .ico { background: #b00020; }
-  .menu-item.hidden { display: none; }
-
-  .page-head { padding: 14px 22px 6px 22px; flex-shrink: 0; }
-  .page-head .p-title { font-size: 26px; font-weight: 800; color: #0a1a3a; }
-  .page-head .p-title span { color: #1a5fd6; }
-  .page-head .p-sub { color: #4a5a7a; font-size: 13px; margin-top: 2px; }
-
-  .chat-wrap { flex: 1; margin: 10px 22px 18px 22px; background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; box-shadow: 4px 4px 0 #0a0a0a; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
-  .chat-head { background: linear-gradient(135deg, #0a1a3a 0%, #1e3a6e 100%); padding: 12px 14px; border-bottom: 3px solid #0a0a0a; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-  .chat-head .ch-title { color: #ffe600; font-weight: 800; font-size: 15px; letter-spacing: 0.5px; }
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 28px; font-weight: 800; color: #0a1a3a; }
+  .title span { color: #1a5fd6; }
+  .subtitle { color: #4a5a7a; font-size: 13px; margin-top: 4px; }
+  .chat-container { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; box-shadow: 4px 4px 0 #0a0a0a; overflow: hidden; display: flex; flex-direction: column; height: 70vh; }
+  .chat-head { background: #0a1a3a; padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+  .chat-head .ch-title { color: #ffe600; font-size: 16px; font-weight: 800; }
   .chat-head .ch-live { margin-left: auto; background: #25d366; color: #fff; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; }
-  .chat-body { flex: 1; overflow-y: auto; padding: 10px; background: #f5f8ff; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
-  .chat-msg { background: #fff; border: 2px solid #0a0a0a; border-radius: 12px; padding: 8px 10px; max-width: 85%; align-self: flex-start; box-shadow: 2px 2px 0 #0a0a0a; }
-  .chat-msg.self { background: #d4e4ff; align-self: flex-end; }
-  .chat-msg .cm-head { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
-  .chat-msg .cm-user { font-weight: 800; font-size: 12px; color: #0a1a3a; }
-  .chat-msg .cm-role { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; }
-  
-  
-  
-  
-  .chat-msg .cm-text { font-size: 13px; color: #0a1a3a; word-break: break-word; white-space: pre-wrap; }
-  .chat-msg .cm-time { font-size: 10px; color: #7a8aaa; margin-top: 3px; text-align: right; }
-  .chat-input { display: flex; gap: 8px; padding: 10px 10px calc(10px + env(safe-area-inset-bottom)); border-top: 3px solid #0a0a0a; background: #fff; flex-shrink: 0; }
-  .chat-input input { flex: 1; padding: 10px 12px; border: 2px solid #0a0a0a; border-radius: 10px; font-size: 14px; background: #f5f8ff; min-width: 0; }
-  .chat-input input:focus { outline: none; border-color: #1a5fd6; }
-  .chat-input button { padding: 10px 16px; border: 2px solid #0a0a0a; border-radius: 10px; background: #1a5fd6; color: #fff; font-weight: 800; cursor: pointer; box-shadow: 2px 2px 0 #0a0a0a; flex-shrink: 0; }
-  .chat-input button:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #0a0a0a; }
-  .chat-empty { text-align: center; color: #7a8aaa; font-size: 13px; padding: 20px; }
-
-  .chat-msg .cm-role { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 4px; }
-  .chat-msg .cm-role.member { background: #d4e4ff; color: #1a5fd6; }
-  .chat-msg .cm-role.premium { background: #ffd4d4; color: #b00020; }
-  .chat-msg .cm-role.owner { background: #ffe600; color: #0a1a3a; }
-  .chat-msg .cm-role.admin { background: #e8d4ff; color: #6a1b9a; }
-  .chat-msg .cm-avatar { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #0a0a0a; background: #8b5cf6; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; overflow: hidden; }
-  .chat-msg .cm-avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .chat-msg .cm-row { display: flex; gap: 8px; align-items: flex-start; }
-  .chat-msg .cm-content { flex: 1; min-width: 0; }
+  .chat-body { flex: 1; overflow-y: auto; padding: 16px; background: #f5f8ff; display: flex; flex-direction: column; gap: 10px; }
+  .chat-msg { display: flex; flex-direction: column; max-width: 80%; }
+  .chat-msg.self { align-self: flex-end; }
+  .cm-row { display: flex; gap: 10px; align-items: flex-start; }
+  .chat-msg.self .cm-row { flex-direction: row-reverse; }
+  .cm-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #0a0a0a; background: #8b5cf6; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; flex-shrink: 0; overflow: hidden; }
+  .cm-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .cm-content { background: #fff; border: 2px solid #0a0a0a; border-radius: 12px; padding: 8px 12px; box-shadow: 2px 2px 0 #0a0a0a; }
+  .chat-msg.self .cm-content { background: #d4e4ff; }
+  .cm-head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .cm-user { font-size: 13px; font-weight: 800; color: #0a1a3a; }
+  .cm-role { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; }
+  .cm-role.member { background: #e0e7ff; color: #1a5fd6; }
+  .cm-role.premium { background: #ffe0e0; color: #b00020; }
+  .cm-role.admin { background: #f3e8ff; color: #8b5cf6; }
+  .cm-role.owner { background: #fff8c5; color: #8a6d00; }
+  .cm-text { font-size: 13px; color: #0a1a3a; line-height: 1.4; word-break: break-word; }
+  .cm-time { font-size: 10px; color: #7a8aaa; text-align: right; margin-top: 4px; }
+  .chat-input-row { display: flex; gap: 8px; padding: 12px; border-top: 3px solid #0a0a0a; background: #fff; }
+  .chat-input-row input { flex: 1; padding: 12px; border: 3px solid #0a0a0a; border-radius: 10px; font-size: 14px; outline: none; }
+  .chat-input-row button { padding: 12px 20px; border: 3px solid #0a0a0a; border-radius: 10px; background: #1a5fd6; color: #fff; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; }
+  .chat-input-row button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <a class="back-btn" href="/index.html" style="display:flex; width:44px; height:44px; border:3px solid #0a0a0a; border-radius:12px; background:#fff; cursor:pointer; align-items:center; justify-content:center; box-shadow:3px 3px 0 #0a0a0a; text-decoration:none; color:#0a1a3a;">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="19" y1="12" x2="5" y2="12"/>
-      <polyline points="12 19 5 12 12 5"/>
-    </svg>
-  </a>
-  <div class="hamburger" onclick="toggleMenu()">
-    <span></span><span></span><span></span>
-  </div>
-  <div class="brand">XYREX</div>
+  <a class="back-btn" href="/index.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
+  <div class="brand">Chat Public</div>
   <div class="user-mini" id="userMini">-</div>
 </div>
 
-<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
-
-<div class="sidebar" id="sidebar">
-<div class="sidebar-head">
-    <div class="s-title">XYREX</div>
-    <div class="s-sub">Aplikasi Yang Dikembangkan DLIZ</div>
-    <div class="s-user" id="sidebarUser">-</div>
-    <div class="s-role" id="sidebarRole">-</div>
-  </div>
-
-    <a class="menu-item home" href="/index.html">
-    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
-    <span>Home</span>
-  </a>
-  <a class="menu-item" href="/chat.html">
-    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3h.5a8.48 8.48 0 0 1 8 8z"/></svg></div>
-    <span>Chat Public</span>
-  </a>
-  
-  <a class="menu-item" href="/tools.html">
-    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
-    <span>Tools</span>
-  </a>
-  <a class="menu-item" href="/settings.html">
-    <div class="ico" style="background:#8b5cf6;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
-    <span>Pengaturan</span>
-  </a>
-
-  <a class="menu-item" href="/pairing.html">
-    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg></div>
-    <span>Pairing Sender</span>
-  </a>
-  <a class="menu-item" href="/bug.html">
-    <div class="ico" style="background:#b00020;" style="background:#b00020;" style="background:#b00020;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></div>
-    <span>Bug Nomor</span>
-  </a>
-  <a class="menu-item" href="/bangrup.html">
-    <div class="ico" style="background:#b00020;" style="background:#b00020;" style="background:#b00020;" style="background:#b00020;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
-    <span>Ban Grup</span>
-  </a>
-  <a class="menu-item adm hidden" id="menuOwner" href="/owner.html">
-    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
-    <span>Panel Owner</span>
-  </a>
-  <a class="menu-item own" href="https://wa.me/6283891660447" target="_blank">
-    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8A8.5 8.5 0 0 1 3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3h.5a8.48 8.48 0 0 1 8 8z"/></svg></div>
-    <span>Hubungi Owner</span>
-  </a>
-  <div class="menu-item out" onclick="doLogout()">
-    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
-    <span>Logout</span>
-  </div>
+<div class="title-wrap">
+  <div class="title">Chat <span>Public</span></div>
+  <div class="subtitle">Obrolan bersama semua user XYREX</div>
 </div>
 
-<div class="page-head">
-  <div class="p-title">Chat <span>Public</span></div>
-  <div class="p-sub">Obrolan bersama semua user XYREX</div>
-</div>
-
-<div class="chat-wrap">
+<div class="chat-container">
   <div class="chat-head">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffe600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-    </svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffe600" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3h.5a8.48 8.48 0 0 1 8 8z"/></svg>
     <div class="ch-title">Room Global</div>
     <div class="ch-live">LIVE</div>
   </div>
   <div class="chat-body" id="chatBody">
-    <div class="chat-empty">Belum ada pesan. Jadilah yang pertama!</div>
+    <div class="chat-empty" style="text-align:center; color:#7a8aaa; font-size:12px; margin:auto;">Belum ada pesan. Jadilah yang pertama!</div>
   </div>
-  <div class="chat-input">
+  <div class="chat-input-row">
     <input type="text" id="chatInput" placeholder="Tulis pesan..." maxlength="500" onkeypress="if(event.key==='Enter') sendChat()">
     <button onclick="sendChat()">Kirim</button>
   </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
+<script src="/tools-toast.js"></script>
 <script>
 const token = localStorage.getItem('xyrex_token');
-const role = localStorage.getItem('xyrex_role');
 const user = localStorage.getItem('xyrex_user');
-
-if (!token) { window.location.href = '/login.html'; }
-
+const role = localStorage.getItem('xyrex_role');
+if (!token) window.location.href = '/login.html';
 document.getElementById('userMini').textContent = (user || '-').toUpperCase();
-document.getElementById('sidebarUser').textContent = user || '-';
-document.getElementById('sidebarRole').textContent = (role || '-').toUpperCase();
 
-if (role === 'owner') {
-  document.getElementById('menuOwner').classList.remove('hidden');
-}
-
-function toggleMenu() {
-  document.getElementById('sidebar').classList.toggle('show');
-  document.getElementById('overlay').classList.toggle('show');
-}
-
-async function doLogout() {
-  try { await fetch('/api/logout', { method: 'POST', headers: { 'x-auth-token': token } }); } catch(e) {}
-  localStorage.removeItem('xyrex_player');
-  localStorage.removeItem('xyrex_token');
-  localStorage.removeItem('xyrex_user');
-  localStorage.removeItem('xyrex_role');
-  window.location.href = '/login.html';
-}
-
-const socket = io();
 const chatBody = document.getElementById('chatBody');
 let renderedIds = new Set();
+const socket = io();
 
 function roleClass(r) {
   if (!r) return 'member';
@@ -227,9 +111,13 @@ function appendMsg(m) {
   const div = document.createElement('div');
   div.className = 'chat-msg' + (m.username === user ? ' self' : '');
   
-  // Avatar: foto profil atau initial
   const initial = (m.username || '?').charAt(0).toUpperCase();
-  let avatarHtml = '<div class="cm-avatar" id="av_' + m.username + '_' + m.time + '">' + initial + '</div>';
+  
+  // LOGIKA BARU: Langsung pakai m.avatar kalau ada
+  let avatarHtml = '<div class="cm-avatar">' + initial + '</div>';
+  if (m.avatar && m.avatar.trim() !== '') {
+    avatarHtml = '<div class="cm-avatar"><img src="' + m.avatar + '"></div>';
+  }
   
   const roleCls = roleClass(m.role);
   const roleLabel = (m.role || 'member').toUpperCase();
@@ -243,23 +131,7 @@ function appendMsg(m) {
     '</div></div>';
   chatBody.appendChild(div);
   chatBody.scrollTop = chatBody.scrollHeight;
-  
-  // Load avatar dari server
-  fetch('/api/profile/' + encodeURIComponent(m.username), { headers: { 'x-auth-token': token } })
-    .then(r => r.json())
-    .then(p => {
-      if (p.ok && p.avatar) {
-        const av = document.getElementById('av_' + m.username + '_' + m.time);
-        if (av) av.innerHTML = '<img src="' + p.avatar + '">';
-      }
-    }).catch(() => {});
 }
-
-function escapeAttr(s) {
-  return String(s || '').replace(/'/g, '\\\'').replace(/"/g, '');
-}
-
-
 
 function sendChat() {
   const input = document.getElementById('chatInput');
@@ -273,7 +145,7 @@ socket.on('chatHistory', (msgs) => {
   chatBody.innerHTML = '';
   renderedIds.clear();
   if (!msgs || msgs.length === 0) {
-    chatBody.innerHTML = '<div class="chat-empty">Belum ada pesan. Jadilah yang pertama!</div>';
+    chatBody.innerHTML = '<div class="chat-empty" style="text-align:center; color:#7a8aaa; font-size:12px; margin:auto;">Belum ada pesan. Jadilah yang pertama!</div>';
     return;
   }
   msgs.forEach(appendMsg);
@@ -281,8 +153,5 @@ socket.on('chatHistory', (msgs) => {
 
 socket.on('chatMessage', (m) => { appendMsg(m); });
 </script>
-
-<script src="/tools-toast.js"></script>
-<script src="/global-player-iframe.js"></script>
 </body>
 </html>

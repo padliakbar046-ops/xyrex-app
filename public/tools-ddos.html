@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - DDoS Server</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .back-btn { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 28px; font-weight: 800; color: #0a1a3a; }
+  .title span { color: #b00020; }
+  .subtitle { color: #4a5a7a; font-size: 13px; margin-top: 4px; }
+  .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 18px; box-shadow: 4px 4px 0 #0a0a0a; }
+  input { width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 14px; margin-bottom: 12px; background: #f5f8ff; }
+  input:focus { outline: none; border-color: #b00020; }
+  label { display: block; font-weight: 700; color: #0a1a3a; margin-bottom: 6px; font-size: 13px; }
+  .row { display: flex; gap: 10px; }
+  .row > div { flex: 1; }
+  .btn { display: block; width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+  .btn-primary { background: #b00020; color: #fff; }
+  .btn-danger { background: #0a1a3a; color: #fff; }
+  .stats-box { background: #0a1a3a; border: 3px solid #0a0a0a; border-radius: 14px; padding: 16px; color: #fff; margin-top: 14px; display: none; }
+  .stats-box.show { display: block; }
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+  .stat-item { background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 10px 6px; text-align: center; }
+  .stat-item .lbl { font-size: 10px; text-transform: uppercase; color: #a8b8d8; font-weight: 700; letter-spacing: 1px; }
+  .stat-item .val { font-size: 18px; font-weight: 800; color: #ffe600; margin-top: 4px; word-break: break-all; }
+  .progress-track { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; height: 22px; overflow: hidden; margin-bottom: 10px; }
+  .progress-fill { background: linear-gradient(90deg, #b00020, #ff4f6a); height: 100%; width: 0%; transition: width 0.3s; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 800; }
+  .status-line { font-size: 11px; color: #a8b8d8; text-align: center; line-height: 1.5; word-break: break-word; }
+  .warn-box { background: #ffe0e0; border: 3px solid #b00020; border-radius: 12px; padding: 12px; font-size: 12px; color: #7a0015; margin-bottom: 12px; line-height: 1.5; }
+  .warn-box b { color: #b00020; }
+  .info-box { background: #fff3cd; border: 2px solid #856404; border-radius: 10px; padding: 12px; font-size: 12px; color: #856404; margin-top: 12px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/tools.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
+  <div class="brand">DDoS Server</div>
+  <div class="user-mini" id="userMini">-</div>
+</div>
+
+<div class="title-wrap">
+  <div class="title">DDoS <span>Server</span></div>
+  <div class="subtitle">Serang web target hingga loop</div>
+</div>
+
+<div class="card">
+  <div class="warn-box">
+    <b>PERINGATAN HP AMAN:</b><br>
+    Maksimal <b>120 detik</b> per serangan dan <b>200 concurrent</b>. Jangan lebih dari ini karena HP bisa freeze, panas, atau restart sendiri. Sistem otomatis berhenti kalau menembus <b>100.000 request</b>.
+  </div>
+
+  <label>URL Target (http/https)</label>
+  <input type="text" id="targetUrl" placeholder="https://target.com">
+
+  <div class="row">
+    <div>
+      <label>Durasi (max 120 detik)</label>
+      <input type="number" id="duration" value="60" min="5" max="120">
+    </div>
+    <div>
+      <label>Concurrent (max 200)</label>
+      <input type="number" id="concurrent" value="100" min="10" max="200">
+    </div>
+  </div>
+
+  <button class="btn btn-primary" id="startBtn" onclick="startDdos()">Mulai Serangan</button>
+  <button class="btn btn-danger" id="stopBtn" style="display:none; margin-top:10px;" onclick="stopDdos()">Stop</button>
+
+  <div id="proxyInfo" style="margin-bottom:10px; font-size:12px; color:#0a1a3a; font-weight:700;">🛡 Memuat daftar proxy...</div>
+<div class="info-box">
+    Request dikirim dari server XYREX, HP kamu aman. Semakin tinggi concurrent, semakin berat beban target. Target dengan proteksi Cloudflare akan membalas 403 (tetap dihitung sebagai request valid).
+  </div>
+
+  <div class="stats-box" id="statsBox">
+    <div class="stats-grid">
+      <div class="stat-item"><div class="lbl">Sent</div><div class="val" id="stSent">0</div></div>
+      <div class="stat-item"><div class="lbl">RPS</div><div class="val" id="stRps">0</div></div>
+      <div class="stat-item"><div class="lbl">Elapsed</div><div class="val" id="stElapsed">0s</div></div>
+      <div class="stat-item"><div class="lbl">OK</div><div class="val" id="stOk">0</div></div>
+      <div class="stat-item"><div class="lbl">ERR</div><div class="val" id="stErr">0</div></div>
+      <div class="stat-item"><div class="lbl">Bytes</div><div class="val" id="stBytes">0</div></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progFill">0%</div></div>
+    <div class="status-line" id="statusLine">Menunggu...</div>
+  </div>
+</div>
+
+<script src="/tools-toast.js"></script>
+<script>
+const token = localStorage.getItem('xyrex_token');
+const user = localStorage.getItem('xyrex_user');
+if (!token) window.location.href = '/login.html';
+document.getElementById('userMini').textContent = (user || '-').toUpperCase();
+
+let currentSession = null;
+let pollInterval = null;
+let totalDuration = 0;
+
+
+async function loadProxyInfo() {
+  try {
+    const r = await fetch('/api/tools/ddos/status?id=dummy', { headers: { 'x-auth-token': token } });
+    // Endpoint status bakal gagal (invalid id), tapi kita bisa pake endpoint baru buat cek proxy
+  } catch (e) {}
+}
+
+async function startDdos() {
+  let url = document.getElementById('targetUrl').value.trim();
+  let duration = parseInt(document.getElementById('duration').value) || 60;
+  let concurrent = parseInt(document.getElementById('concurrent').value) || 100;
+
+  if (!url) { window.xyrexToast('URL target wajib diisi', 'error'); return; }
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    window.xyrexToast('URL harus diawali http:// atau https://', 'error'); return;
+  }
+
+  // Batas aman di sisi client
+  if (duration > 120) { window.xyrexToast('Durasi max 120 detik (anti HP panas)', 'error'); return; }
+  if (concurrent > 200) { window.xyrexToast('Concurrent max 200 (anti HP freeze)', 'error'); return; }
+
+  const startBtn = document.getElementById('startBtn');
+  startBtn.disabled = true;
+  startBtn.textContent = 'Memproses...';
+
+  try {
+    const r = await fetch('/api/tools/ddos/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+      body: JSON.stringify({ url, duration, concurrent })
+    });
+    const j = await r.json();
+    if (!j.ok) {
+      window.xyrexToast('Gagal: ' + j.msg, 'error');
+      startBtn.disabled = false;
+      startBtn.textContent = 'Mulai Serangan';
+      return;
+    }
+
+    currentSession = j.sessionId;
+    totalDuration = j.duration;
+    document.getElementById('statsBox').classList.add('show');
+    document.getElementById('stopBtn').style.display = 'block';
+    startBtn.textContent = 'Berjalan...';
+    window.xyrexToast('Serangan dimulai', 'success');
+
+    pollInterval = setInterval(pollStatus, 3000);
+  } catch (e) {
+    window.xyrexToast('Error: ' + e.message, 'error');
+    startBtn.disabled = false;
+    startBtn.textContent = 'Mulai Serangan';
+  }
+}
+
+async function pollStatus() {
+  if (!currentSession) return;
+  try {
+    const r = await fetch('/api/tools/ddos/status?id=' + currentSession, {
+      headers: { 'x-auth-token': token }
+    });
+    const j = await r.json();
+    if (!j.ok) {
+      resetUI();
+      window.xyrexToast('Session selesai', 'info');
+      return;
+    }
+
+    document.getElementById('stSent').textContent = j.sent;
+    document.getElementById('stRps').textContent = j.rps;
+    document.getElementById('stOk').textContent = j.okCount;
+    document.getElementById('stErr').textContent = j.err;
+    document.getElementById('stBytes').textContent = (j.bytes / 1024 / 1024).toFixed(2) + 'MB';
+    document.getElementById('stElapsed').textContent = j.elapsed.toFixed(0) + 's';
+
+    const pct = Math.min(100, Math.round((j.elapsed / totalDuration) * 100));
+    const fill = document.getElementById('progFill');
+    fill.style.width = pct + '%';
+    fill.textContent = pct + '%';
+
+    const statusKeys = Object.keys(j.statuses || {});
+    const statusText = statusKeys.length
+      ? 'Status: ' + Object.entries(j.statuses).map(function(e){ return e[0] + 'x' + e[1]; }).join(' | ')
+      : 'Menunggu response...';
+    document.getElementById('statusLine').textContent = statusText;
+
+    if (j.done) {
+      let msg = 'Serangan selesai';
+      if (j.reason === 'max_req') msg = 'Auto-stop: batas 100rb request tembus (HP aman)';
+      else if (j.reason === 'time') msg = 'Serangan selesai (waktu habis)';
+      else if (j.reason === 'manual') msg = 'Dihentikan manual';
+      window.xyrexToast(msg, 'success');
+      resetUI();
+    }
+  } catch (e) {}
+}
+
+async function stopDdos() {
+  if (!currentSession) return;
+  try {
+    await fetch('/api/tools/ddos/stop', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+      body: JSON.stringify({ id: currentSession })
+    });
+  } catch (e) {}
+  resetUI();
+  window.xyrexToast('Dihentikan', 'info');
+}
+
+function resetUI() {
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+  currentSession = null;
+  const startBtn = document.getElementById('startBtn');
+  startBtn.disabled = false;
+  startBtn.textContent = 'Mulai Serangan';
+  document.getElementById('stopBtn').style.display = 'none';
+}
+</script>
+<script src="/global-player-iframe.js"></script>
+</body>
+</html>

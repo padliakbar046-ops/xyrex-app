@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - Panel Admin</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .hamburger { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #1a5fd6; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; box-shadow: 3px 3px 0 #0a0a0a; }
+  .hamburger span { display: block; width: 22px; height: 3px; background: #fff; border-radius: 2px; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 200; }
+  .overlay.show { display: block; }
+  .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100vh; background: #fff; border-right: 3px solid #0a0a0a; z-index: 300; transition: left 0.25s ease; overflow-y: auto; }
+  .sidebar.show { left: 0; }
+  .sidebar-head { background: linear-gradient(135deg, #0a1a3a 0%, #1e3a6e 100%); padding: 22px 18px; border-bottom: 3px solid #0a0a0a; }
+  .sidebar-head .s-title { color: #ffe600; font-size: 22px; font-weight: 800; text-shadow: 0 0 10px #ffe600; }
+  .sidebar-head .s-sub { color: #a8b8d8; font-size: 12px; margin-top: 4px; }
+  .sidebar-head .s-user { color: #fff; font-size: 13px; margin-top: 10px; font-weight: 700; }
+  .sidebar-head .s-role { display: inline-block; background: #ffe600; color: #0a1a3a; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; margin-top: 6px; }
+  .menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 2px solid #e0e0e0; cursor: pointer; text-decoration: none; color: #0a1a3a; font-weight: 700; font-size: 15px; }
+  .menu-item .ico { width: 38px; height: 38px; border: 2px solid #0a0a0a; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #1a5fd6; color: #fff; flex-shrink: 0; }
+  .menu-item.home .ico { background: #0a1a3a; }
+  .menu-item.own .ico { background: #25d366; }
+  .menu-item.adm .ico { background: #ffe600; color: #0a0a0a; }
+  .menu-item.out .ico { background: #b00020; }
+  .menu-item.hidden { display: none; }
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 32px; font-weight: 800; color: #0a1a3a; }
+  .title span { color: #1a5fd6; }
+  .subtitle { color: #4a5a7a; font-size: 14px; margin-top: 4px; }
+  .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 18px; box-shadow: 4px 4px 0 #0a0a0a; }
+  .card-head { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; color: #0a1a3a; margin-bottom: 12px; }
+  .btn { display: inline-block; padding: 12px 18px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; margin: 4px 4px 4px 0; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .btn-primary { background: #1a5fd6; color: #fff; }
+  .btn-danger { background: #b00020; color: #fff; }
+  input, select { width: 100%; padding: 12px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 14px; margin-bottom: 10px; background: #f5f8ff; }
+  input:focus, select:focus { outline: none; border-color: #1a5fd6; }
+  label { display: block; font-weight: 700; color: #0a1a3a; margin-bottom: 5px; font-size: 13px; }
+  .msg { padding: 10px; border-radius: 10px; font-weight: 700; text-align: center; margin-bottom: 10px; font-size: 13px; display: none; }
+  .msg-err { background: #ffe0e0; color: #b00020; border: 2px solid #b00020; display: block; }
+  .msg-ok { background: #d4ffd8; color: #0a7a2a; border: 2px solid #0a7a2a; display: block; }
+  .user-item { background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+  .user-item .uname { font-weight: 800; color: #0a1a3a; font-size: 15px; }
+  .user-item .uinfo { font-size: 12px; color: #4a5a7a; margin-top: 2px; }
+  .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-left: 6px; }
+  .badge-member { background: #e0e0e0; color: #333; }
+  .badge-premium { background: #fff3cd; color: #856404; }
+  .badge-admin { background: #f8d7da; color: #842029; }
+  .badge-owner { background: #d4ffd8; color: #0a7a2a; }
+  .actions { margin-top: 8px; }
+  .actions select { width: auto; display: inline-block; padding: 6px 10px; font-size: 12px; margin: 0 4px 0 0; }
+  .actions .btn { padding: 8px 12px; font-size: 12px; }
+  .footer { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px 0 22px; padding: 14px; text-align: center; box-shadow: 4px 4px 0 #0a0a0a; }
+  .footer .by { color: #1a5fd6; font-weight: 700; font-size: 14px; }
+  .footer .cr { color: #7a8aaa; font-size: 11px; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/index.html" style="display:flex; width:44px; height:44px; border:3px solid #0a0a0a; border-radius:12px; background:#fff; cursor:pointer; align-items:center; justify-content:center; box-shadow:3px 3px 0 #0a0a0a; text-decoration:none; color:#0a1a3a;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+  </a>
+  <div class="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+  <div class="brand">Panel Admin</div>
+  <div class="user-mini" id="userMini">-</div>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<div class="sidebar" id="sidebar">
+<div class="sidebar-head">
+    <div class="s-title">XYREX</div>
+    <div class="s-sub">Aplikasi Yang Dikembangkan DLIZ</div>
+    <div class="s-user" id="sidebarUser">-</div>
+    <div class="s-role" id="sidebarRole">-</div>
+  </div>
+  <a class="menu-item home" href="/index.html"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div><span>Home</span></a>
+  <a class="menu-item" href="/chat.html"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3h.5a8.48 8.48 0 0 1 8 8z"/></svg></div><span>Chat Public</span></a>
+  <a class="menu-item" href="/tools.html"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><span>Tools</span></a>
+  <a class="menu-item" href="/settings.html"><div class="ico" style="background:#8b5cf6;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><span>Pengaturan</span></a>
+  <a class="menu-item" href="/pairing.html"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg></div><span>Pairing Sender</span></a>
+  <a class="menu-item" href="/bug.html"><div class="ico" style="background:#b00020;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></div><span>Bug Nomor</span></a>
+  <a class="menu-item" href="/bangrup.html"><div class="ico" style="background:#b00020;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div><span>Ban Grup</span></a>
+  <a class="menu-item adm" href="/admin.html"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><span>Panel Admin</span></a>
+  <a class="menu-item adm hidden" id="menuOwner" href="/owner.html"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div><span>Panel Owner</span></a>
+  <a class="menu-item own" href="https://wa.me/6283891660447" target="_blank"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div><span>Hubungi Owner</span></a>
+  <div class="menu-item out" onclick="doLogout()"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div><span>Logout</span></div>
+</div>
+
+<div class="title-wrap">
+  <div class="title">Kelola <span>Akun</span></div>
+  <div class="subtitle">Buat akun baru (Khusus Admin & Owner)</div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a5fd6" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+    Buat Akun Baru
+  </div>
+  <div id="msg" class="msg"></div>
+  <label>Username</label>
+  <input type="text" id="newUser" placeholder="Username baru">
+  <label>Password</label>
+  <input type="text" id="newPass" placeholder="Password">
+  <label>Role</label>
+  <select id="newRole">
+    <option value="member">Member</option>
+    <option value="premium">Premium</option>
+    <option value="admin" id="optAdmin" style="display:none;">Admin (Khusus Owner)</option>
+  </select>
+  <button class="btn btn-primary" onclick="createUser()">Buat Akun</button>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a5fd6" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Daftar Akun
+  </div>
+  <div id="userList"></div>
+</div>
+
+<div class="footer">
+  <div class="by">By: DLIZ</div>
+  <div class="cr">&copy; 2026 XYREX - All Rights Reserved</div>
+</div>
+
+<script>
+const token = localStorage.getItem('xyrex_token');
+const role = localStorage.getItem('xyrex_role');
+const user = localStorage.getItem('xyrex_user');
+
+if (!token) { window.location.href = '/login.html'; }
+if (role !== 'admin' && role !== 'owner') {
+  alert('Hanya Admin/Owner yang bisa akses');
+  window.location.href = '/index.html';
+}
+
+document.getElementById('userMini').textContent = (user || '-').toUpperCase();
+document.getElementById('sidebarUser').textContent = user || '-';
+document.getElementById('sidebarRole').textContent = (role || '-').toUpperCase();
+
+if (role === 'owner') {
+  document.getElementById('menuOwner').classList.remove('hidden');
+  document.getElementById('optAdmin').style.display = 'block'; // Owner bisa bikin admin
+}
+
+function toggleMenu() {
+  document.getElementById('sidebar').classList.toggle('show');
+  document.getElementById('overlay').classList.toggle('show');
+}
+
+async function doLogout() {
+  try { await fetch('/api/logout', { method: 'POST', headers: { 'x-auth-token': token } }); } catch(e) {}
+  localStorage.removeItem('xyrex_player');
+  localStorage.removeItem('xyrex_token');
+  localStorage.removeItem('xyrex_user');
+  localStorage.removeItem('xyrex_role');
+  window.location.href = '/login.html';
+}
+
+function showMsg(txt, ok) {
+  const el = document.getElementById('msg');
+  el.textContent = txt;
+  el.className = 'msg ' + (ok ? 'msg-ok' : 'msg-err');
+  setTimeout(() => { el.style.display = 'none'; el.className = 'msg'; }, 3000);
+}
+
+async function loadUsers() {
+  const r = await fetch('/api/users', { headers: { 'x-auth-token': token } });
+  const j = await r.json();
+  if (!j.ok) { showMsg(j.msg, false); return; }
+  const list = document.getElementById('userList');
+  list.innerHTML = '';
+  j.users.forEach(u => {
+    const div = document.createElement('div');
+    div.className = 'user-item';
+    const badgeClass = 'badge-' + u.role;
+    
+    // Logika Tombol Aksi
+    let actionsHtml = '';
+    if (role === 'owner') {
+      // Owner bisa ubah role & hapus
+      if (u.role === 'owner') {
+        actionsHtml = '<span style="font-size:12px;color:#0a7a2a;font-weight:700;">Owner tidak bisa diubah</span>';
+      } else {
+        actionsHtml = `
+          <select onchange="changeRole('${u.username}', this.value)">
+            <option value="member" ${u.role==='member'?'selected':''}>Member</option>
+            <option value="premium" ${u.role==='premium'?'selected':''}>Premium</option>
+            <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+          </select>
+          <button class="btn btn-danger" onclick="deleteUser('${u.username}')">Hapus</button>
+        `;
+      }
+    } else if (role === 'admin') {
+      // Admin cuma bisa lihat, ga bisa hapus / ubah role
+      if (u.role === 'owner' || u.role === 'admin') {
+        actionsHtml = '<span style="font-size:12px;color:#7a8aaa;font-style:italic;">Tidak bisa diubah oleh Admin</span>';
+      } else {
+        actionsHtml = '<span style="font-size:12px;color:#7a8aaa;font-style:italic;">Hanya Owner yang bisa mengubah/menghapus</span>';
+      }
+    }
+
+    div.innerHTML = `
+      <div class="uname">${u.username}<span class="badge ${badgeClass}">${u.role.toUpperCase()}</span></div>
+      <div class="uinfo">Dibuat: ${new Date(u.createdAt).toLocaleString('id-ID')} oleh ${u.createdBy}</div>
+      <div class="actions">${actionsHtml}</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+async function createUser() {
+  const username = document.getElementById('newUser').value.trim();
+  const password = document.getElementById('newPass').value;
+  const roleInput = document.getElementById('newRole').value;
+  if (!username || !password) { showMsg('Isi username dan password', false); return; }
+  
+  // Pilih endpoint berdasarkan role yang login
+  const endpoint = (role === 'owner') ? '/api/users' : '/api/admin/users';
+  
+  const r = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+    body: JSON.stringify({ username, password, role: roleInput })
+  });
+  const j = await r.json();
+  showMsg(j.msg, j.ok);
+  if (j.ok) {
+    document.getElementById('newUser').value = '';
+    document.getElementById('newPass').value = '';
+    loadUsers();
+  }
+}
+
+async function deleteUser(username) {
+  if (!confirm('Hapus akun ' + username + '?')) return;
+  const r = await fetch('/api/users/' + encodeURIComponent(username), {
+    method: 'DELETE',
+    headers: { 'x-auth-token': token }
+  });
+  const j = await r.json();
+  showMsg(j.msg, j.ok);
+  if (j.ok) loadUsers();
+}
+
+async function changeRole(username, role) {
+  const r = await fetch('/api/users/' + encodeURIComponent(username) + '/role', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+    body: JSON.stringify({ role })
+  });
+  const j = await r.json();
+  showMsg(j.msg, j.ok);
+  if (j.ok) loadUsers();
+}
+
+loadUsers();
+</script>
+<script src="/tools-toast.js"></script>
+<script src="/global-player-iframe.js"></script>
+</body>
+</html>

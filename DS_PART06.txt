@@ -1,0 +1,444 @@
+=== BAGIAN 6 dari 10 ===
+JANGAN EKSEKUSI DULU. Tunggu sampai semua 10 bagian masuk.
+
+});
+
+socket.on('pairingError', ({ message }) => {
+  document.getElementById('pairStatus').textContent = 'Status: ' + message;
+  document.getElementById('pairStatus').className = 'status status-off';
+});
+
+socket.on('bugLog', ({ msg }) => { log(msg); });
+
+socket.on('disconnected', () => {
+  document.getElementById('pairStatus').textContent = 'Status: Terputus (logged out)';
+  document.getElementById('pairStatus').className = 'status status-off';
+});
+</script>
+
+<script src="/tools-toast.js"></script>
+<script src="/global-player-iframe.js"></script>
+</body>
+</html>
+
+===== FILE: public/bug.html =====
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - Bug Nomor</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .back-btn { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; }
+  .hamburger { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #1a5fd6; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; box-shadow: 3px 3px 0 #0a0a0a; }
+  .hamburger span { display: block; width: 22px; height: 3px; background: #fff; border-radius: 2px; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 200; }
+  .overlay.show { display: block; }
+  .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100vh; background: #fff; border-right: 3px solid #0a0a0a; z-index: 300; transition: left 0.25s ease; overflow-y: auto; }
+  .sidebar.show { left: 0; }
+  .sidebar-head { background: linear-gradient(135deg, #0a1a3a 0%, #1e3a6e 100%); padding: 22px 18px; border-bottom: 3px solid #0a0a0a; }
+  .sidebar-head .s-title { color: #ffe600; font-size: 22px; font-weight: 800; text-shadow: 0 0 10px #ffe600; }
+  .sidebar-head .s-sub { color: #a8b8d8; font-size: 12px; margin-top: 4px; }
+  .sidebar-head .s-user { color: #fff; font-size: 13px; margin-top: 10px; font-weight: 700; }
+  .sidebar-head .s-role { display: inline-block; background: #ffe600; color: #0a1a3a; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; margin-top: 6px; }
+  .menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 2px solid #e0e0e0; cursor: pointer; text-decoration: none; color: #0a1a3a; font-weight: 700; font-size: 15px; }
+  .menu-item .ico { width: 38px; height: 38px; border: 2px solid #0a0a0a; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #1a5fd6; color: #fff; flex-shrink: 0; }
+  .menu-item.home .ico { background: #0a1a3a; }
+  .menu-item.own .ico { background: #25d366; }
+  .menu-item.adm .ico { background: #ffe600; color: #0a0a0a; }
+  .menu-item.out .ico { background: #b00020; }
+  .menu-item.hidden { display: none; }
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 32px; font-weight: 800; color: #0a1a3a; }
+  .title span { color: #b00020; }
+  .subtitle { color: #4a5a7a; font-size: 14px; margin-top: 4px; }
+  .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 18px; box-shadow: 4px 4px 0 #0a0a0a; }
+  .card-head { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; color: #0a1a3a; margin-bottom: 12px; }
+  input { width: 100%; padding: 12px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 14px; margin-bottom: 14px; background: #f5f8ff; }
+  input:focus { outline: none; border-color: #1a5fd6; }
+  label { display: block; font-weight: 700; color: #0a1a3a; margin-bottom: 8px; font-size: 13px; }
+  .btn { display: block; width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; text-align: center; margin-top: 14px; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .btn-primary { background: #b00020; color: #fff; }
+  .sender-row { display: flex; gap: 12px; margin-bottom: 14px; }
+  .sender-box { flex: 1; background: #f5f8ff; border: 3px solid #0a0a0a; border-radius: 14px; padding: 14px 8px; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .sender-box.active { background: #ffe600; box-shadow: 4px 4px 0 #0a0a0a; }
+  .sender-box .sb-ico { width: 44px; height: 44px; margin: 0 auto 6px auto; border: 3px solid #0a0a0a; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #1a5fd6; color: #fff; }
+  .sender-box.active .sb-ico { background: #0a1a3a; }
+  .sender-box .sb-title { font-size: 13px; font-weight: 800; color: #0a1a3a; }
+  .sender-box .sb-count { font-size: 12px; font-weight: 800; color: #b00020; margin-top: 4px; }
+  .sender-box.active .sb-count { color: #0a7a2a; }
+  #senderInfo { font-size: 11px; color: #4a5a7a; margin-top: -8px; margin-bottom: 14px; }
+  .mode-slider { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px; padding: 8px 4px 16px 4px; -webkit-overflow-scrolling: touch; }
+  .mode-slider::-webkit-scrollbar { height: 4px; }
+  .mode-slider::-webkit-scrollbar-thumb { background: #1a5fd6; border-radius: 4px; }
+  .mode-card { flex: 0 0 70%; scroll-snap-align: center; background: linear-gradient(135deg, #ffffff 0%, #eef4ff 100%); border: 3px solid #0a0a0a; border-radius: 16px; padding: 18px 14px; box-shadow: 6px 6px 0 #0a0a0a; text-align: center; cursor: pointer; transition: all 0.3s ease; transform: perspective(800px) rotateY(-8deg) scale(0.92); opacity: 0.7; }
+  .mode-card.active { transform: perspective(800px) rotateY(0deg) scale(1); opacity: 1; background: linear-gradient(135deg, #fff3cd 0%, #ffe600 100%); box-shadow: 8px 8px 0 #0a0a0a; }
+  .mode-card .mc-ico { width: 60px; height: 60px; margin: 0 auto 10px auto; border: 3px solid #0a0a0a; border-radius: 14px; display: flex; align-items: center; justify-content: center; background: #b00020; color: #fff; }
+  .mode-card.active .mc-ico { background: #0a1a3a; }
+  .mode-card .mc-title { font-size: 16px; font-weight: 800; color: #0a1a3a; margin-bottom: 4px; }
+  .mode-card .mc-desc { font-size: 11px; color: #4a5a7a; line-height: 1.4; }
+  .mode-card .mc-badge { display: inline-block; margin-top: 8px; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; background: #0a1a3a; color: #ffe600; }
+  #progressArea { display: none; margin-top: 14px; }
+  .progress-label { font-size: 13px; font-weight: 700; color: #0a1a3a; margin-bottom: 6px; }
+  .progress-track { background: #e0e0e0; border: 3px solid #0a0a0a; border-radius: 10px; height: 26px; overflow: hidden; }
+  .progress-fill { background: linear-gradient(90deg, #1a5fd6, #25d366); height: 100%; width: 0%; transition: width 0.3s; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800; }
+  #progressText { font-size: 11px; color: #4a5a7a; margin-top: 6px; text-align: center; }
+  #doneArea { display: none; margin-top: 14px; background: #d4ffd8; border: 3px solid #0a7a2a; border-radius: 12px; padding: 12px; text-align: center; }
+  #doneArea span { font-size: 14px; font-weight: 800; color: #0a7a2a; margin-left: 6px; vertical-align: middle; }
+  .xyrex-toast-wrap { position: fixed; top: 16px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 9999; pointer-events: none; padding: 0 16px; }
+  .xyrex-toast { background: #1a1a1a; border: 2px solid #6a4fff; border-radius: 14px; padding: 14px 18px; box-shadow: 0 6px 24px rgba(106,79,255,0.35); display: flex; align-items: center; gap: 12px; max-width: 360px; width: 100%; pointer-events: auto; animation: toastSlide 0.3s ease; }
+  .xyrex-toast .toast-dot { width: 10px; height: 10px; border-radius: 50%; background: #a78bfa; flex-shrink: 0; box-shadow: 0 0 8px #a78bfa; }
+  .xyrex-toast .toast-msg { color: #fff; font-size: 13px; font-weight: 700; flex: 1; line-height: 1.4; }
+  .xyrex-toast .toast-close { background: transparent; border: none; color: #a8a8a8; font-size: 22px; cursor: pointer; padding: 0 4px; flex-shrink: 0; }
+  @keyframes toastSlide { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/index.html">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+  </a>
+  <div class="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+  <div class="brand">Bug Nomor</div>
+  <div class="user-mini" id="userMini">-</div>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<div class="sidebar" id="sidebar">
+<div class="sidebar-head">
+    <div class="s-title">XYREX</div>
+    <div class="s-sub">Aplikasi Yang Dikembangkan DLIZ</div>
+    <div class="s-user" id="sidebarUser">-</div>
+    <div class="s-role" id="sidebarRole">-</div>
+  </div>
+    <a class="menu-item home" href="/index.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+    <span>Home</span>
+  </a>
+  <a class="menu-item" href="/chat.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3h.5a8.48 8.48 0 0 1 8 8z"/></svg></div>
+    <span>Chat Public</span>
+  </a>
+  <a class="menu-item" href="/tools.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+    <span>Tools</span>
+  </a>
+  <a class="menu-item" href="/settings.html">
+    <div class="ico" style="background:#8b5cf6;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+    <span>Pengaturan</span>
+  </a>
+
+  <a class="menu-item" href="/pairing.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg></div>
+    <span>Pairing Sender</span>
+  </a>
+  <a class="menu-item" href="/bug.html">
+    <div class="ico" style="background:#b00020;" style="background:#b00020;" style="background:#b00020;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></div>
+    <span>Bug Nomor</span>
+  </a>
+  <a class="menu-item" href="/bangrup.html">
+    <div class="ico" style="background:#b00020;" style="background:#b00020;" style="background:#b00020;" style="background:#b00020;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+    <span>Ban Grup</span>
+  </a>
+  <a class="menu-item adm hidden" id="menuOwner" href="/owner.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+    <span>Panel Owner</span>
+  </a>
+  <a class="menu-item own" href="https://wa.me/6283891660447" target="_blank">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8A8.5 8.5 0 0 1 3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3h.5a8.48 8.48 0 0 1 8 8z"/></svg></div>
+    <span>Hubungi Owner</span>
+  </a>
+  <div class="menu-item out" onclick="doLogout()">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
+    <span>Logout</span>
+  </div>
+</div>
+
+<div class="title-wrap">
+  <div class="title">Bug <span>Nomor</span></div>
+  <div class="subtitle">Pilih mode dengan slide</div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b00020" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    Konfigurasi
+  </div>
+
+  <label>Pilih Sender</label>
+  <div class="sender-row">
+    <div class="sender-box active" id="boxPribadi" onclick="selectSenderType('pribadi')">
+      <div class="sb-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+      <div class="sb-title">Sender Pribadi</div>
+      <div class="sb-count" id="countPribadi">X</div>
+    </div>
+    <div class="sender-box" id="boxGlobal" onclick="selectSenderType('global')">
+      <div class="sb-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+      <div class="sb-title">Sender Global</div>
+      <div class="sb-count" id="countGlobal">X</div>
+    </div>
+  </div>
+  <div id="senderInfo">—</div>
+
+  <label>Nomor Target WhatsApp</label>
+  <input type="tel" id="targetNum" placeholder="628xxxxxxxxxx">
+
+  <label>Pilih Mode Bug</label>
+  <div class="mode-slider">
+    <div class="mode-card active" data-mode="crash" onclick="selectMode(this)">
+      <div class="mc-ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+      <div class="mc-title">Crash</div>
+      <div class="mc-desc">Kirim payload besar hingga app target crash</div>
+      <span class="mc-badge">50x</span>
+    </div>
+    <div class="mode-card" data-mode="delay" onclick="selectMode(this)">
+      <div class="mc-ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="mc-title">Delay</div>
+      <div class="mc-desc">Bikin pesan target delay</div>
+      <span class="mc-badge">40x</span>
+    </div>
+    <div class="mode-card" data-mode="foreclose" onclick="selectMode(this)">
+      <div class="mc-ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+      <div class="mc-title">Foreclose</div>
+      <div class="mc-desc">Paksa WhatsApp target tertutup</div>
+      <span class="mc-badge">80x</span>
+    </div>
+    <div class="mode-card" data-mode="crash_ios" onclick="selectMode(this)">
+      <div class="mc-ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/></svg></div>
+      <div class="mc-title">Crash iOS</div>
+      <div class="mc-desc">Payload khusus untuk WhatsApp iOS</div>
+      <span class="mc-badge">100x</span>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="runBug()">Eksekusi Bug</button>
+
+  <div id="progressArea">
+    <div class="progress-label">Sedang memproses bug...</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill">0%</div></div>
+    <div id="progressText">0 / 0</div>
+  </div>
+  <div id="doneArea">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0a7a2a" stroke-width="3" style="vertical-align:middle;"><polyline points="20 6 9 17 4 12"/></svg>
+    <span>Bug selesai</span>
+  </div>
+</div>
+
+<div class="xyrex-toast-wrap" id="toastWrap"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const token = localStorage.getItem('xyrex_token');
+const role = localStorage.getItem('xyrex_role');
+const user = localStorage.getItem('xyrex_user');
+if (!token) window.location.href = '/login.html';
+
+document.getElementById('userMini').textContent = (user || '-').toUpperCase();
+document.getElementById('sidebarUser').textContent = user || '-';
+document.getElementById('sidebarRole').textContent = (role || '-').toUpperCase();
+if (role === 'owner') document.getElementById('menuOwner').classList.remove('hidden');
+
+function toggleMenu() {
+  document.getElementById('sidebar').classList.toggle('show');
+  document.getElementById('overlay').classList.toggle('show');
+}
+
+async function doLogout() {
+  try { await fetch('/api/logout', { method: 'POST', headers: { 'x-auth-token': token } }); } catch (e) {}
+  localStorage.clear();
+  window.location.href = '/login.html';
+}
+
+function showPopup(title, msg) {
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'xyrex-toast';
+  el.innerHTML = '<div class="toast-dot"></div><div class="toast-msg"></div><button class="toast-close">×</button>';
+  el.querySelector('.toast-msg').textContent = msg;
+  el.querySelector('.toast-close').onclick = () => el.remove();
+  wrap.appendChild(el);
+  setTimeout(() => { if (el.parentElement) el.remove(); }, 3500);
+}
+
+let senderType = 'pribadi';
+let senderPribadiCount = 0;
+let senderGlobalCount = 0;
+
+function selectSenderType(t) {
+  senderType = t;
+  document.getElementById('boxPribadi').classList.toggle('active', t === 'pribadi');
+  document.getElementById('boxGlobal').classList.toggle('active', t === 'global');
+}
+
+let selectedMode = 'crash';
+function selectMode(el) {
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedMode = el.dataset.mode;
+  el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+}
+
+const socket = io();
+
+socket.on('connect', () => setTimeout(() => socket.emit('sender:list'), 500));
+socket.on('senderUpdate', () => socket.emit('sender:list'));
+
+socket.on('sender:data', ({ pribadi, global, me }) => {
+  senderPribadiCount = pribadi.length;
+  senderGlobalCount = global.length;
+  document.getElementById('countPribadi').textContent = senderPribadiCount > 0 ? senderPribadiCount : 'X';
+  document.getElementById('countGlobal').textContent = senderGlobalCount > 0 ? senderGlobalCount : 'X';
+  document.getElementById('senderInfo').textContent = 'Login: ' + (me || '-') + ' | Pribadi: ' + senderPribadiCount + ' | Global: ' + senderGlobalCount;
+  if (senderPribadiCount === 0 && senderGlobalCount > 0) selectSenderType('global');
+  else if (senderPribadiCount > 0) selectSenderType('pribadi');
+});
+
+socket.on('bugProgress', ({ current, total }) => {
+  document.getElementById('progressArea').style.display = 'block';
+  document.getElementById('doneArea').style.display = 'none';
+  const pct = Math.round((current / total) * 100);
+  const fill = document.getElementById('progressFill');
+  fill.style.width = pct + '%';
+  fill.textContent = pct + '%';
+  document.getElementById('progressText').textContent = current + ' / ' + total;
+});
+
+socket.on('bugDone', () => {
+  document.getElementById('progressArea').style.display = 'none';
+  document.getElementById('doneArea').style.display = 'block';
+});
+
+socket.on('bugError', ({ code, msg }) => {
+  showPopup('Gagal', msg);
+});
+
+function runBug() {
+  const senderAktif = (senderType === 'pribadi' && senderPribadiCount > 0) || (senderType === 'global' && senderGlobalCount > 0);
+  if (!senderAktif) {
+    if (senderType === 'pribadi') {
+      showPopup('Sender Kosong', 'Kamu belum pairing sender WhatsApp. Pairing dulu di menu Pairing Sender.');
+    } else {
+      showPopup('Sender Global Kosong', 'Belum ada user lain yang pairing sender di XYREX.');
+    }
+    return;
+  }
+
+  const target = document.getElementById('targetNum').value.trim();
+  if (!target) {
+    showPopup('Nomor Kosong', 'Isi nomor target WhatsApp dulu.');
+    return;
+  }
+  if (target.length < 10) {
+    showPopup('Nomor Terlalu Pendek', 'Nomor target minimal 10 digit. Format: 628xxxxxxxxxx');
+    return;
+  }
+  if (!/^[0-9]+$/.test(target)) {
+    showPopup('Nomor Tidak Valid', 'Nomor target hanya boleh angka. Format: 628xxxxxxxxxx');
+    return;
+  }
+  if (!target.startsWith('62') && !target.startsWith('0')) {
+    showPopup('Format Nomor Salah', 'Nomor target harus diawali 62 atau 0. Contoh: 6281234567890');
+    return;
+  }
+
+  document.getElementById('progressArea').style.display = 'block';
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('progressFill').textContent = '0%';
+  document.getElementById('progressText').textContent = '0 / 0';
+  document.getElementById('doneArea').style.display = 'none';
+  socket.emit('bugNumber', { target, mode: selectedMode });
+}
+</script>
+
+<script src="/tools-toast.js"></script>
+<script src="/global-player-iframe.js"></script>
+</body>
+</html>
+
+===== FILE: public/bangrup.html =====
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - Ban Grup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .back-btn { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; }
+  .hamburger { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #1a5fd6; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; box-shadow: 3px 3px 0 #0a0a0a; }
+  .hamburger span { display: block; width: 22px; height: 3px; background: #fff; border-radius: 2px; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 200; }
+  .overlay.show { display: block; }
+  .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100vh; background: #fff; border-right: 3px solid #0a0a0a; z-index: 300; transition: left 0.25s ease; overflow-y: auto; }
+  .sidebar.show { left: 0; }
+  .sidebar-head { background: linear-gradient(135deg, #0a1a3a 0%, #1e3a6e 100%); padding: 22px 18px; border-bottom: 3px solid #0a0a0a; }
+  .sidebar-head .s-title { color: #ffe600; font-size: 22px; font-weight: 800; text-shadow: 0 0 10px #ffe600; }
+  .sidebar-head .s-sub { color: #a8b8d8; font-size: 12px; margin-top: 4px; }
+  .sidebar-head .s-user { color: #fff; font-size: 13px; margin-top: 10px; font-weight: 700; }
+  .sidebar-head .s-role { display: inline-block; background: #ffe600; color: #0a1a3a; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; margin-top: 6px; }
+  .menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 2px solid #e0e0e0; cursor: pointer; text-decoration: none; color: #0a1a3a; font-weight: 700; font-size: 15px; }
+  .menu-item .ico { width: 38px; height: 38px; border: 2px solid #0a0a0a; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #1a5fd6; color: #fff; flex-shrink: 0; }
+  .menu-item.home .ico { background: #0a1a3a; }
+  .menu-item.own .ico { background: #25d366; }
+  .menu-item.adm .ico { background: #ffe600; color: #0a0a0a; }
+  .menu-item.out .ico { background: #b00020; }
+  .menu-item.hidden { display: none; }
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 32px; font-weight: 800; color: #0a1a3a; }
+  .title span { color: #b00020; }
+  .subtitle { color: #4a5a7a; font-size: 14px; margin-top: 4px; }
+  .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 18px; box-shadow: 4px 4px 0 #0a0a0a; }
+  .card-head { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; color: #0a1a3a; margin-bottom: 12px; }
+  input { width: 100%; padding: 12px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 14px; margin-bottom: 14px; background: #f5f8ff; }
+  input:focus { outline: none; border-color: #1a5fd6; }
+  label { display: block; font-weight: 700; color: #0a1a3a; margin-bottom: 8px; font-size: 13px; }
+  .btn { display: block; width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; text-align: center; margin-top: 14px; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .btn-primary { background: #b00020; color: #fff; }
+
+  /* Sender box */
+  .sender-row { display: flex; gap: 12px; margin-bottom: 14px; }
+  .sender-box { flex: 1; background: #f5f8ff; border: 3px solid #0a0a0a; border-radius: 14px; padding: 14px 8px; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .sender-box.active { background: #ffe600; box-shadow: 4px 4px 0 #0a0a0a; }
+  .sender-box .sb-ico { width: 44px; height: 44px; margin: 0 auto 6px auto; border: 3px solid #0a0a0a; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #1a5fd6; color: #fff; }
+  .sender-box.active .sb-ico { background: #0a1a3a; }
+  .sender-box .sb-title { font-size: 13px; font-weight: 800; color: #0a1a3a; }
+  .sender-box .sb-count { font-size: 12px; font-weight: 800; color: #b00020; margin-top: 4px; }
+  .sender-box.active .sb-count { color: #0a7a2a; }
+  #senderInfo { font-size: 11px; color: #4a5a7a; margin-top: -8px; margin-bottom: 14px; }
+
+  /* Slider mode 3D */
+  .mode-slider { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px; padding: 8px 4px 16px 4px; -webkit-overflow-scrolling: touch; }
+  .mode-slider::-webkit-scrollbar { height: 4px; }
+  .mode-slider::-webkit-scrollbar-thumb { background: #1a5fd6; border-radius: 4px; }
+  .mode-card { flex: 0 0 70%; scroll-snap-align: center; background: linear-gradient(135deg, #ffffff 0%, #eef4ff 100%); border: 3px solid #0a0a0a; border-radius: 16px; padding: 18px 14px; box-shadow: 6px 6px 0 #0a0a0a; text-align: center; cursor: pointer; transition: all 0.3s ease; transform: perspective(800px) rotateY(-8deg) scale(0.92); opacity: 0.7; }
+  .mode-card.active { transform: perspective(800px) rotateY(0deg) scale(1); opacity: 1; background: linear-gradient(135deg, #fff3cd 0%, #ffe600 100%); box-shadow: 8px 8px 0 #0a0a0a; }
+  .mode-card .mc-ico { width: 60px; height: 60px; margin: 0 auto 10px auto; border: 3px solid #0a0a0a; border-radius: 14px; display: flex; align-items: center; justify-content: center; background: #b00020; color: #fff; }
+  .mode-card.active .mc-ico { background: #0a1a3a; }
+  .mode-card .mc-title { font-size: 16px; font-weight: 800; color: #0a1a3a; margin-bottom: 4px; }
+  .mode-card .mc-desc { font-size: 11px; color: #4a5a7a; line-height: 1.4; }
+  .mode-card .mc-badge { display: inline-block; margin-top: 8px; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; background: #0a1a3a; color: #ffe600; }
+
+  /* Progress */
+  #progressArea { display: none; margin-top: 14px; }
+  .progress-label { font-size: 13px; font-weight: 700; color: #0a1a3a; margin-bottom: 6px; }
+  .progress-track { background: #e0e0e0; border: 3px solid #0a0a0a; border-radius: 10px; height: 26px; overflow: hidden; }
+  .progress-fill { background: linear-gradient(90deg, #b00020, #ff6b00); height: 100%; width: 0%; transition: width 0.3s; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800; }
+  #progressText { font-size: 11px; color: #4a5a7a; margin-top: 6px; text-align: center; }
+  #doneArea { display: none; margin-top: 14px; background: #d4ffd8; border: 3px solid #0a7a2a; border-radius: 12px; padding: 12px; text-align: center; }
+  #doneArea span { font-size: 14px; font-weight: 800; color: #0a7a2a; margin-left: 6px; vertical-align: middle; }
+
+
+=== AKHIR BAGIAN 6 ===

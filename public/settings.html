@@ -22,12 +22,12 @@
   input:focus { outline: none; border-color: #1a5fd6; }
   .btn { display: block; width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; background: #1a5fd6; color: #fff; }
   .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
-  .btn-secondary { background: #8b5cf6; }
   .avatar-preview { width: 100px; height: 100px; border: 3px solid #0a0a0a; border-radius: 50%; background: #e0e7ff; color: #4a5a7a; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; margin: 0 auto 14px auto; overflow: hidden; }
   .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
-  .avatar-input { display: none; }
-  .upload-label { display: block; text-align: center; background: #f5f8ff; border: 3px dashed #0a0a0a; border-radius: 12px; padding: 16px; cursor: pointer; margin-bottom: 12px; font-size: 13px; color: #4a5a7a; }
-  .upload-label:active { background: #d4e4ff; }
+  .preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+  .preset-item { border: 3px solid #0a0a0a; border-radius: 12px; overflow: hidden; cursor: pointer; aspect-ratio: 1/1; background: #f5f8ff; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .preset-item img { width: 100%; height: 100%; object-fit: cover; }
+  .preset-item.active { border-color: #1a5fd6; box-shadow: 0 0 0 3px #1a5fd6; transform: scale(1.05); }
 </style>
 </head>
 <body>
@@ -51,8 +51,13 @@
       <circle cx="12" cy="7" r="4"/>
     </svg>
   </div>
-  <input type="file" id="avatarInput" class="avatar-input" accept="image/*" onchange="uploadAvatar(event)">
-  <label for="avatarInput" class="upload-label">📷 Pilih Foto Profil (max 5MB)</label>
+  
+  <label>Pilih Foto Profil</label>
+  <div class="preset-grid" id="presetGrid">
+    <!-- DIKOSONGIN, BAKAL DIISI JS -->
+  </div>
+  
+  <button class="btn" onclick="savePreset()">Simpan Foto Profil</button>
 </div>
 
 <div class="card">
@@ -73,54 +78,83 @@ const user = localStorage.getItem('xyrex_user');
 if (!token) window.location.href = '/login.html';
 document.getElementById('userMini').textContent = (user || '-').toUpperCase();
 
-function loadProfile() {
+const PRESETS = [
+  { name: 'Default', url: '/avatars/default.png' },
+  { name: 'Mafia', url: '/avatars/mafia.png' },
+  { name: 'Mask', url: '/avatars/mask.png' },
+  { name: 'Anime', url: '/avatars/anime.png' },
+  { name: 'Foto 5', url: '/avatars/avatar5.png' },
+  { name: 'Foto 6', url: '/avatars/avatar6.png' },
+  { name: 'Foto 7', url: '/avatars/avatar7.png' },
+  { name: 'Burung', url: '/avatars/burung.png' }
+];
+
+let selectedPresetUrl = '';
+
+// Render preset LANGSUNG (tanpa nunggu API)
+function renderPresets(currentAvatar) {
+  const grid = document.getElementById('presetGrid');
+  grid.innerHTML = '';
+  
+  PRESETS.forEach(p => {
+    const el = document.createElement('div');
+    el.className = 'preset-item' + (currentAvatar === p.url ? ' active' : '');
+    el.innerHTML = `<img src="${p.url}" alt="${p.name}">`;
+    el.onclick = () => {
+      document.querySelectorAll('.preset-item').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      selectedPresetUrl = p.url;
+      document.getElementById('avatarPreview').innerHTML = `<img src="${p.url}">`;
+    };
+    grid.appendChild(el);
+  });
+}
+
+// Panggil renderPresets LANGSUNG pas halaman dibuka
+renderPresets('');
+
+// Ambil foto saat ini dari server (buat update avatar preview)
+function loadAvatar() {
   fetch('/api/profile', { headers: { 'x-auth-token': token } })
     .then(r => r.json())
     .then(j => {
-      if (j.ok) {
-        const av = document.getElementById('avatarPreview');
-        if (j.avatar) {
-          av.innerHTML = '<img src="' + j.avatar + '">';
-        } else {
-          // Fallback SVG avatar default
-          av.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 100%; height: 100%; padding: 18px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
-        }
+      if (j.ok && j.avatar && j.avatar.trim() !== '') {
+        document.getElementById('avatarPreview').innerHTML = `<img src="${j.avatar}">`;
+        selectedPresetUrl = j.avatar;
+        
+        // Highlight preset yang aktif
+        document.querySelectorAll('.preset-item').forEach(el => {
+          const img = el.querySelector('img');
+          if (img && img.getAttribute('src') === j.avatar) el.classList.add('active');
+        });
       }
-    });
+    }).catch(e => console.log('Gagal load profile:', e));
 }
-loadProfile();
 
-function uploadAvatar(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  if (file.size > 5 * 1024 * 1024) {
-    window.xyrexToast('Foto max 5MB', 'error');
+// Panggil pas halaman dibuka
+loadAvatar();
+
+function savePreset() {
+  if (!selectedPresetUrl) {
+    window.xyrexToast('Pilih foto profil dulu', 'error');
     return;
   }
-  const reader = new FileReader();
-  reader.onload = () => {
-    const dataUrl = reader.result;
-    
-    // Update UI LANGSUNG sebelum kirim ke server
-    document.getElementById('avatarPreview').innerHTML = '<img src="' + dataUrl + '">';
-    window.xyrexToast('Mengunggah foto...', 'info');
-
-    fetch('/api/profile/avatar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-      body: JSON.stringify({ avatar: dataUrl })
-    })
-    .then(r => r.json())
-    .then(j => {
-      if (j.ok) {
-        window.xyrexToast('Foto profil berhasil diupdate!', 'success');
-        loadProfile();
-      } else {
-        window.xyrexToast('Gagal: ' + j.msg, 'error');
-      }
-    }).catch(e => window.xyrexToast('Error: ' + e.message, 'error'));
-  };
-  reader.readAsDataURL(file);
+  
+  window.xyrexToast('Menyimpan foto profil...', 'info');
+  
+  fetch('/api/profile/avatar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+    body: JSON.stringify({ avatar: selectedPresetUrl })
+  })
+  .then(r => r.json())
+  .then(j => {
+    if (j.ok) {
+      window.xyrexToast('Foto profil berhasil diupdate!', 'success');
+    } else {
+      window.xyrexToast('Gagal: ' + j.msg, 'error');
+    }
+  }).catch(e => window.xyrexToast('Error: ' + e.message, 'error'));
 }
 
 function changePassword() {
@@ -148,6 +182,5 @@ function changePassword() {
   });
 }
 </script>
-
 </body>
 </html>

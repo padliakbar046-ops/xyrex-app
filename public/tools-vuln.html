@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - Web Scanner</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .back-btn { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 28px; font-weight: 800; color: #0a1a3a; }
+  .title span { color: #b00020; }
+  .subtitle { color: #4a5a7a; font-size: 13px; margin-top: 4px; }
+  .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 18px; box-shadow: 4px 4px 0 #0a0a0a; }
+  input { width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 14px; margin-bottom: 12px; background: #f5f8ff; }
+  .btn { display: block; width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; background: #b00020; color: #fff; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .btn:disabled { background: #7a8aaa; cursor: not-allowed; }
+  .vuln-item { background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .v-type { font-size: 13px; font-weight: 800; color: #0a1a3a; }
+  .v-sev { display: inline-block; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px; margin-left: 6px; }
+  .sev-Critical { background: #b00020; color: #fff; }
+  .sev-High { background: #ff4f6a; color: #fff; }
+  .sev-Medium { background: #ffe600; color: #0a1a3a; }
+  .sev-Low { background: #e0e0e0; color: #0a1a3a; }
+  .v-url { font-size: 11px; color: #1a5fd6; margin-top: 4px; word-break: break-all; }
+  .v-detail { font-size: 11px; color: #4a5a7a; margin-top: 4px; }
+  .v-effect { background: #fff3cd; border: 2px solid #856404; border-radius: 8px; padding: 8px; margin-top: 8px; font-size: 11px; color: #856404; line-height: 1.5; }
+  .btn-ddos { display: inline-block; padding: 8px 12px; border: 2px solid #0a0a0a; border-radius: 8px; font-size: 11px; font-weight: 800; background: #ff4f6a; color: #fff; cursor: pointer; box-shadow: 2px 2px 0 #0a0a0a; margin-top: 8px; }
+  .btn-inject { display: inline-block; padding: 8px 12px; border: 2px solid #0a0a0a; border-radius: 8px; font-size: 11px; font-weight: 800; background: #8b5cf6; color: #fff; cursor: pointer; box-shadow: 2px 2px 0 #0a0a0a; margin-top: 8px; margin-left: 6px; }
+  
+  /* Live Stats */
+  #liveStats { display: none; background: #0a1a3a; color: #fff; border: 3px solid #0a0a0a; border-radius: 14px; padding: 16px; margin-top: 14px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+  .stat-item { background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 10px 6px; text-align: center; }
+  .stat-lbl { font-size: 10px; text-transform: uppercase; color: #a8b8d8; font-weight: 700; }
+  .stat-val { font-size: 18px; font-weight: 800; color: #ffe600; margin-top: 4px; }
+  .progress-track { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; height: 22px; overflow: hidden; margin-bottom: 10px; }
+  .progress-fill { background: linear-gradient(90deg, #b00020, #ff4f6a); height: 100%; width: 0%; transition: width 0.3s; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 800; }
+  .status-line { font-size: 11px; color: #a8b8d8; text-align: center; }
+
+  /* Custom Alert */
+  .custom-alert-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 11000; align-items: center; justify-content: center; padding: 20px; }
+  .custom-alert-box { background: #fff; border: 4px solid #0a0a0a; border-radius: 20px; padding: 24px; width: 100%; max-width: 320px; box-shadow: 6px 6px 0 #0a0a0a; text-align: center; animation: popIn 0.25s; }
+  @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .custom-alert-icon { width: 60px; height: 60px; border-radius: 50%; background: #ffe600; border: 3px solid #0a0a0a; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; box-shadow: 3px 3px 0 #0a0a0a; }
+  .custom-alert-msg { font-size: 15px; font-weight: 800; color: #0a1a3a; margin-bottom: 20px; line-height: 1.4; }
+  .custom-alert-btns { display: flex; gap: 10px; }
+  .custom-alert-btns button { flex: 1; padding: 12px; border: 3px solid #0a0a0a; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; }
+  .custom-alert-btns button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .btn-alert-cancel { background: #e0e0e0; }
+  .btn-alert-ok { background: #b00020; color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/tools.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
+  <div class="brand">Web Scanner</div>
+  <div class="user-mini" id="userMini">-</div>
+</div>
+
+<div class="title-wrap">
+  <div class="title">Web <span>Scanner</span></div>
+  <div class="subtitle">Cari celah & serang target</div>
+</div>
+
+<div class="card">
+  <label style="display:block;font-weight:700;color:#0a1a3a;margin-bottom:8px;font-size:13px;">URL Target</label>
+  <input type="text" id="targetUrl" placeholder="https://target.com">
+  <button class="btn" id="scanBtn" onclick="startScan()">Mulai Scan</button>
+
+  <div class="result-box" id="resultBox" style="display:none; margin-top:14px;">
+    <div style="font-weight:800;color:#0a1a3a;font-size:14px;margin-bottom:10px;">Hasil Scan</div>
+    <div id="resultList"></div>
+  </div>
+
+  <!-- Live Stats DDoS -->
+  <div id="liveStats">
+    <div class="stats-grid">
+      <div class="stat-item"><div class="stat-lbl">Sent</div><div class="stat-val" id="stSent">0</div></div>
+      <div class="stat-item"><div class="stat-lbl">RPS</div><div class="stat-val" id="stRps">0</div></div>
+      <div class="stat-item"><div class="stat-lbl">Elapsed</div><div class="stat-val" id="stElapsed">0s</div></div>
+      <div class="stat-item"><div class="stat-lbl">OK</div><div class="stat-val" id="stOk">0</div></div>
+      <div class="stat-item"><div class="stat-lbl">ERR</div><div class="stat-val" id="stErr">0</div></div>
+      <div class="stat-item"><div class="stat-lbl">Bytes</div><div class="stat-val" id="stBytes">0</div></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progFill">0%</div></div>
+    <div class="status-line" id="statusLine">Menunggu...</div>
+  </div>
+</div>
+
+<div class="custom-alert-overlay" id="customAlert">
+  <div class="custom-alert-box">
+    <div class="custom-alert-icon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="3"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+    <div class="custom-alert-msg" id="customAlertMsg">Pesan</div>
+    <div class="custom-alert-btns"><button class="btn-alert-cancel" onclick="closeCustomAlert()">Batal</button><button class="btn-alert-ok" onclick="confirmCustomAlert()">Oke</button></div>
+  </div>
+</div>
+
+<script src="/tools-toast.js"></script>
+<script>
+const token = localStorage.getItem('xyrex_token');
+const user = localStorage.getItem('xyrex_user');
+if (!token) window.location.href = '/login.html';
+document.getElementById('userMini').textContent = (user || '-').toUpperCase();
+
+const EFFECTS = {
+  'Info Disclosure': 'DDoS: Server kebanjiran request file sensitif, CPU naik & lambat. Exploit: Baca file rahasia (password DB, API key).',
+  'SQL Injection (Error-based)': 'DDoS: Query error numpuk, CPU database naik drastis & server down. Exploit: Dump seluruh database.',
+  'SQL Injection (Time-based)': 'DDoS: Tiap request bikin database SLEEP 5 detik. Kirim 100 = antri 500 detik = HANG TOTAL. Exploit: Dump data.',
+  'Cross-Site Scripting (XSS)': 'DDoS: Ringan. Exploit: Script jahat jalan di browser user (curi cookie, redirect phishing).',
+  'Local File Inclusion (LFI)': 'DDoS: Server baca file sistem ribuan kali, disk I/O tinggi & lemot parah. Exploit: Baca file rahasia (SSH key, config).',
+  'Header Config': 'DDoS: Ga ngaruh. Exploit: Clickjacking atau XSS lewat celah lain.',
+  'Info Disclosure (Server Header)': 'DDoS: Ringan. Exploit: Bocorin versi server, gampang dicariin celah yang cocok.'
+};
+
+let currentTargetHost = '';
+let alertCallback = null;
+let pollInterval = null;
+let currentSession = null;
+let totalDuration = 0;
+
+function showCustomAlert(msg, cb) { document.getElementById('customAlertMsg').textContent = msg; document.getElementById('customAlert').style.display = 'flex'; alertCallback = cb; }
+function closeCustomAlert() { document.getElementById('customAlert').style.display = 'none'; alertCallback = null; }
+function confirmCustomAlert() { if (alertCallback) alertCallback(); closeCustomAlert(); }
+
+async function startScan() {
+  const url = document.getElementById('targetUrl').value.trim();
+  if (!url) { window.xyrexToast('URL kosong', 'error'); return; }
+  try { currentTargetHost = new URL(url).origin; } catch(e) { window.xyrexToast('URL invalid', 'error'); return; }
+
+  const btn = document.getElementById('scanBtn');
+  btn.disabled = true; btn.textContent = 'Scanning...';
+  document.getElementById('resultBox').style.display = 'none';
+
+  try {
+    const r = await fetch('/api/tools/vuln/scan', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-auth-token': token }, body: JSON.stringify({ url }) });
+    const j = await r.json();
+    if (!j.ok) { window.xyrexToast('Gagal: ' + j.msg, 'error'); btn.disabled = false; btn.textContent = 'Mulai Scan'; return; }
+
+    document.getElementById('resultBox').style.display = 'block';
+    const list = document.getElementById('resultList');
+    list.innerHTML = '';
+    
+    if (j.results.length === 0) {
+      list.innerHTML = '<div style="color:#0a7a2a;font-weight:700;font-size:13px;text-align:center;padding:10px;">Tidak ada celah terdeteksi.</div>';
+    } else {
+      j.results.forEach(v => {
+        const el = document.createElement('div');
+        el.className = 'vuln-item';
+        const effectText = EFFECTS[v.type] || 'Belum ada penjelasan.';
+        el.innerHTML = `
+          <div class="v-type">${v.type}<span class="v-sev sev-${v.severity}">${v.severity}</span></div>
+          <div class="v-url">${v.url}</div>
+          <div class="v-detail">${v.detail}</div>
+          <div class="v-effect"><b>Efek kalau diserang:</b><br>${effectText}</div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="btn-ddos" onclick="serangDDoS('${currentTargetHost}')">Serang DDoS</button>
+            <button class="btn-inject" onclick="injectMalware('${currentTargetHost}', '${v.type}')">Inject Malware</button>
+          </div>
+        `;
+        list.appendChild(el);
+      });
+    }
+    window.xyrexToast('Scan selesai: ' + j.total + ' celah', 'success');
+  } catch (e) { window.xyrexToast('Error: ' + e.message, 'error'); }
+  btn.disabled = false; btn.textContent = 'Mulai Scan';
+}
+
+async function serangDDoS(targetUrl) {
+  showCustomAlert('Yakin mau DDoS target ini? ' + targetUrl, async () => {
+    try {
+      const r = await fetch('/api/tools/ddos/start', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-auth-token': token }, body: JSON.stringify({ url: targetUrl, duration: 60, concurrent: 100 }) });
+      const j = await r.json();
+      if (j.ok) {
+        currentSession = j.sessionId;
+        totalDuration = j.duration;
+        document.getElementById('liveStats').style.display = 'block';
+        window.xyrexToast('DDoS dimulai!', 'success');
+        pollInterval = setInterval(pollStatus, 2000);
+      } else { window.xyrexToast('Gagal: ' + j.msg, 'error'); }
+    } catch (e) { window.xyrexToast('Error: ' + e.message, 'error'); }
+  });
+}
+
+async function pollStatus() {
+  if (!currentSession) return;
+  try {
+    const r = await fetch('/api/tools/ddos/status?id=' + currentSession, { headers: { 'x-auth-token': token } });
+    const j = await r.json();
+    if (!j.ok) { resetStats(); return; }
+    
+    document.getElementById('stSent').textContent = j.sent;
+    document.getElementById('stRps').textContent = j.rps;
+    document.getElementById('stOk').textContent = j.okCount;
+    document.getElementById('stErr').textContent = j.err;
+    document.getElementById('stBytes').textContent = (j.bytes / 1024 / 1024).toFixed(2) + 'MB';
+    document.getElementById('stElapsed').textContent = j.elapsed.toFixed(0) + 's';
+    
+    const pct = Math.min(100, Math.round((j.elapsed / totalDuration) * 100));
+    const fill = document.getElementById('progFill');
+    fill.style.width = pct + '%'; fill.textContent = pct + '%';
+    
+    const statusKeys = Object.keys(j.statuses || {});
+    document.getElementById('statusLine').textContent = statusKeys.length ? 'Status: ' + Object.entries(j.statuses).map(e => e[0] + '×' + e[1]).join(' | ') : 'Menunggu response...';
+    
+    if (j.done) { resetStats(); window.xyrexToast('DDoS selesai', 'success'); }
+  } catch(e) {}
+}
+
+function resetStats() {
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+  currentSession = null;
+}
+
+async function injectMalware(targetUrl, type) {
+  showCustomAlert('Inject malware tipe ' + type + ' ke ' + targetUrl + '?', async () => {
+    try {
+      const r = await fetch('/api/tools/vuln/inject', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-auth-token': token }, body: JSON.stringify({ url: targetUrl, type }) });
+      const j = await r.json();
+      if (j.ok) {
+        window.xyrexToast(j.success ? 'Payload berhasil dikirim ke target!' : 'Payload dikirim (mungkin diblok).', j.success ? 'success' : 'info');
+      } else { window.xyrexToast('Gagal: ' + j.msg, 'error'); }
+    } catch (e) { window.xyrexToast('Error: ' + e.message, 'error'); }
+  });
+}
+</script>
+</body>
+</html>

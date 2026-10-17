@@ -1,0 +1,828 @@
+BAGIAN 3 dari 4: file HTML utama.
+=====
+
+--- FILE: public/login.html ---
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - Login</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
+  .header-img { width: 100%; height: 200px; background: linear-gradient(135deg, #0a1a3a 0%, #1e3a6e 50%, #0d2247 100%); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .neon-sign { position: absolute; top: 20px; right: 20px; color: #ffe600; font-weight: bold; font-size: 20px; text-shadow: 0 0 10px #ffe600, 0 0 20px #ff9900; letter-spacing: 2px; }
+  .city-bg { position: absolute; bottom: 0; width: 100%; height: 60%; }
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 42px; font-weight: 800; color: #0a1a3a; letter-spacing: -1px; }
+  .subtitle { color: #4a5a7a; font-size: 15px; margin-top: 4px; }
+  .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 20px; box-shadow: 4px 4px 0 #0a0a0a; }
+  .card-head { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: #0a1a3a; margin-bottom: 12px; }
+  .btn { display: block; width: 100%; margin: 12px 0; padding: 16px; border: 3px solid #0a0a0a; border-radius: 14px; font-size: 17px; font-weight: 700; text-align: center; cursor: pointer; box-shadow: 4px 4px 0 #0a0a0a; text-decoration: none; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #0a0a0a; }
+  .btn-primary { background: #1a5fd6; color: #fff; }
+  .btn-buy { background: #25d366; color: #fff; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .footer { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px 0 22px; padding: 18px; text-align: center; box-shadow: 4px 4px 0 #0a0a0a; }
+  .footer .by { color: #1a5fd6; font-weight: 700; font-size: 16px; }
+  .footer .cr { color: #7a8aaa; font-size: 12px; margin-top: 6px; }
+  input { width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; margin-bottom: 12px; background: #f5f8ff; }
+  input:focus { outline: none; border-color: #1a5fd6; }
+  label { display: block; font-weight: 700; color: #0a1a3a; margin-bottom: 6px; font-size: 14px; }
+  .msg { padding: 12px; border-radius: 10px; font-weight: 700; text-align: center; margin-bottom: 12px; font-size: 14px; display: none; }
+  .msg-err { background: #ffe0e0; color: #b00020; border: 2px solid #b00020; display: block; }
+  .msg-ok { background: #d4ffd8; color: #0a7a2a; border: 2px solid #0a7a2a; display: block; }
+  .info-box { background: #fff3cd; border: 2px solid #856404; border-radius: 10px; padding: 12px; font-size: 13px; color: #856404; margin-bottom: 12px; margin-top: 12px; }
+</style>
+</head>
+<body>
+
+<div class="header-img">
+  <div class="neon-sign">XYREX</div>
+  <svg class="city-bg" viewBox="0 0 400 200" preserveAspectRatio="none">
+    <rect x="0" y="120" width="400" height="80" fill="#06122a"/>
+    <rect x="30" y="60" width="60" height="140" fill="#0a1a3a"/>
+    <rect x="100" y="90" width="50" height="110" fill="#0d2247"/>
+    <rect x="160" y="40" width="70" height="160" fill="#0a1a3a"/>
+    <rect x="240" y="100" width="55" height="100" fill="#0d2247"/>
+    <rect x="305" y="70" width="60" height="130" fill="#0a1a3a"/>
+    <circle cx="200" cy="30" r="18" fill="none" stroke="#ffe600" stroke-width="2"/>
+    <circle cx="200" cy="30" r="8" fill="#ffe600"/>
+    <rect x="0" y="180" width="400" height="20" fill="#03101f"/>
+  </svg>
+</div>
+
+<div class="title-wrap">
+  <div class="title">XYREX</div>
+  <div class="subtitle">Aplikasi Yang Dikembangkan DLIZ</div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a5fd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+      <polyline points="10 17 15 12 10 7"/>
+      <line x1="15" y1="12" x2="3" y2="12"/>
+    </svg>
+    Login XYREX
+  </div>
+
+  <div id="msg" class="msg"></div>
+
+  <label>Username</label>
+  <input type="text" id="username" placeholder="Masukkan username" autocomplete="off">
+  <label>Password</label>
+  <input type="password" id="password" placeholder="Masukkan password">
+  <button class="btn btn-primary" onclick="doLogin()">Login</button>
+
+  <div class="info-box">
+    Belum punya akses? Klik tombol di bawah untuk beli akses ke owner.
+  </div>
+  <a class="btn btn-buy" href="https://wa.me/6283891660447?text=Halo%20Owner%20XYREX%2C%20saya%20mau%20beli%20akses%20login" target="_blank">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+    Buy Access via WhatsApp
+  </a>
+</div>
+
+<div class="footer">
+  <div class="by">By: DLIZ</div>
+  <div class="cr">&copy; 2026 XYREX - All Rights Reserved</div>
+</div>
+
+<script>
+function showMsg(txt, ok) {
+  const el = document.getElementById('msg');
+  el.textContent = txt;
+  el.className = 'msg ' + (ok ? 'msg-ok' : 'msg-err');
+}
+
+async function doLogin() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  if (!username || !password) { showMsg('Isi username dan password', false); return; }
+  try {
+    const r = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const j = await r.json();
+    if (!j.ok) { showMsg(j.msg || 'Login gagal', false); return; }
+    localStorage.setItem('xyrex_token', j.token);
+    localStorage.setItem('xyrex_user', j.username);
+    localStorage.setItem('xyrex_role', j.role);
+    localStorage.removeItem('xyrex_player');
+    localStorage.removeItem('xyrex_sender');
+    showMsg('Login berhasil, mengalihkan...', true);
+    setTimeout(() => { window.location.href = '/index.html'; }, 600);
+  } catch (e) {
+    showMsg('Error: ' + e.message, false);
+  }
+}
+
+document.getElementById('password').addEventListener('keypress', e => {
+  if (e.key === 'Enter') doLogin();
+});
+</script>
+
+</body>
+</html>
+
+
+--- FILE: public/index.html ---
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+    .back-btn { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; }
+  .back-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
+.hamburger { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #1a5fd6; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; box-shadow: 3px 3px 0 #0a0a0a; }
+  .hamburger span { display: block; width: 22px; height: 3px; background: #fff; border-radius: 2px; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 200; }
+  .overlay.show { display: block; }
+  .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100vh; background: #fff; border-right: 3px solid #0a0a0a; z-index: 300; transition: left 0.25s ease; overflow-y: auto; }
+  .sidebar.show { left: 0; }
+  .sidebar-head { background: linear-gradient(135deg, #0a1a3a 0%, #1e3a6e 100%); padding: 22px 18px; border-bottom: 3px solid #0a0a0a; }
+  .sidebar-head .s-title { color: #ffe600; font-size: 22px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 0 10px #ffe600; }
+  .sidebar-head .s-sub { color: #a8b8d8; font-size: 12px; margin-top: 4px; }
+  .sidebar-head .s-user { color: #fff; font-size: 13px; margin-top: 10px; font-weight: 700; }
+  .sidebar-head .s-role { display: inline-block; background: #ffe600; color: #0a1a3a; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; margin-top: 6px; }
+  .menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 2px solid #e0e0e0; cursor: pointer; text-decoration: none; color: #0a1a3a; font-weight: 700; font-size: 15px; }
+  .menu-item .ico { width: 38px; height: 38px; border: 2px solid #0a0a0a; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #1a5fd6; color: #fff; flex-shrink: 0; }
+  .menu-item.home .ico { background: #0a1a3a; }
+  .menu-item.dev .ico { background: #4db8e8; }
+  .menu-item.own .ico { background: #25d366; }
+  .menu-item.adm .ico { background: #ffe600; color: #0a0a0a; }
+  .menu-item.rat .ico { background: #b00020; }
+  .menu-item.out .ico { background: #b00020; }
+  .menu-item.hidden { display: none; }
+
+  .header-img { width: 100%; height: 140px; background: linear-gradient(135deg, #0a1a3a 0%, #1e3a6e 50%, #0d2247 100%); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .neon-sign { position: absolute; top: 20px; right: 20px; color: #ffe600; font-weight: bold; font-size: 20px; text-shadow: 0 0 10px #ffe600, 0 0 20px #ff9900; letter-spacing: 2px; }
+  .city-bg { position: absolute; bottom: 0; width: 100%; height: 60%; }
+  .title-wrap { padding: 18px 22px 6px 22px; }
+  .title { font-size: 40px; font-weight: 800; color: #0a1a3a; letter-spacing: -1px; }
+  .subtitle { color: #4a5a7a; font-size: 14px; margin-top: 4px; }
+
+  .section-label { font-size: 13px; font-weight: 800; color: #4a5a7a; letter-spacing: 1px; text-transform: uppercase; margin: 18px 22px 8px 22px; }
+
+  .feature-card { display: flex; align-items: center; gap: 14px; background: #fff; border: 3px solid #0a0a0a; border-radius: 16px; margin: 12px 22px; padding: 16px; box-shadow: 4px 4px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; cursor: pointer; }
+  .feature-card .fc-ico { width: 52px; height: 52px; border: 3px solid #0a0a0a; border-radius: 14px; background: #1a5fd6; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .feature-card.chat .fc-ico { background: #25d366; }
+  .feature-card.rat .fc-ico { background: #b00020; }
+  .feature-card.build .fc-ico { background: #ffe600; color: #0a0a0a; }
+  .feature-card.owner .fc-ico { background: #ffe600; color: #0a0a0a; }
+  .feature-card .fc-text { flex: 1; min-width: 0; }
+  .feature-card .fc-title { font-size: 16px; font-weight: 800; color: #0a1a3a; }
+  .feature-card .fc-desc { font-size: 12px; color: #4a5a7a; margin-top: 3px; line-height: 1.4; }
+  .feature-card .fc-arrow { color: #0a1a3a; flex-shrink: 0; }
+  .feature-card.hidden { display: none; }
+
+  .footer { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 18px 22px 0 22px; padding: 16px; text-align: center; box-shadow: 4px 4px 0 #0a0a0a; }
+  .footer .by { color: #1a5fd6; font-weight: 700; font-size: 15px; }
+  .footer .cr { color: #7a8aaa; font-size: 11px; margin-top: 6px; }
+
+  .prayer-card { background: linear-gradient(135deg, #0a1a3a 0%, #1e3a6e 100%); border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 18px; box-shadow: 4px 4px 0 #0a0a0a; position: relative; overflow: hidden; }
+  .prayer-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .prayer-head .ph-ico { width: 38px; height: 38px; border-radius: 10px; background: #ffe600; display: flex; align-items: center; justify-content: center; color: #0a1a3a; border: 2px solid #0a0a0a; }
+  .prayer-head .ph-title { color: #ffe600; font-size: 16px; font-weight: 800; }
+  .prayer-head .ph-loc { margin-left: auto; color: #a8b8d8; font-size: 11px; font-weight: 700; text-align: right; line-height: 1.3; }
+  .prayer-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .prayer-item { background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 10px 4px; text-align: center; }
+  .prayer-item.active { background: #ffe600; border-color: #ffe600; box-shadow: 0 0 20px rgba(255,230,0,0.6); }
+  .prayer-item .pi-name { color: #a8b8d8; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+  .prayer-item.active .pi-name { color: #0a1a3a; }
+  .prayer-item .pi-time { color: #ffffff; font-size: 14px; font-weight: 800; margin-top: 4px; }
+  .prayer-item.active .pi-time { color: #0a1a3a; }
+  .prayer-footer { margin-top: 12px; text-align: center; color: #a8b8d8; font-size: 11px; font-weight: 600; }
+  .prayer-footer b { color: #ffe600; }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/index.html" style="display:none;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"/>
+      <polyline points="12 19 5 12 12 5"/>
+    </svg>
+  </a>
+  <div class="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+  <div class="brand">XYREX</div>
+  <div class="user-mini" id="userMini">-</div>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<div class="sidebar" id="sidebar">
+<div class="sidebar-head">
+    <div class="s-title">XYREX</div>
+    <div class="s-sub">Aplikasi Yang Dikembangkan DLIZ</div>
+    <div class="s-user" id="sidebarUser">-</div>
+    <div class="s-role" id="sidebarRole">-</div>
+  </div>
+    <a class="menu-item home" href="/index.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+    <span>Home</span>
+  </a>
+  <a class="menu-item" href="/chat.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3h.5a8.48 8.48 0 0 1 8 8z"/></svg></div>
+    <span>Chat Public</span>
+  </a>
+  <a class="menu-item" href="/tools.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+    <span>Tools</span>
+  </a>
+  <a class="menu-item" href="/settings.html">
+    <div class="ico" style="background:#8b5cf6;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+    <span>Pengaturan</span>
+  </a>
+
+  <a class="menu-item" href="/pairing.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg></div>
+    <span>Pairing Sender</span>
+  </a>
+  <a class="menu-item" href="/bug.html">
+    <div class="ico" style="background:#b00020;" style="background:#b00020;" style="background:#b00020;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></div>
+    <span>Bug Nomor</span>
+  </a>
+  <a class="menu-item" href="/bangrup.html">
+    <div class="ico" style="background:#b00020;" style="background:#b00020;" style="background:#b00020;" style="background:#b00020;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+    <span>Ban Grup</span>
+  </a>
+  <a class="menu-item adm hidden" id="menuOwner" href="/owner.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+    <span>Panel Owner</span>
+  </a>
+  <a class="menu-item own" href="https://wa.me/6283891660447" target="_blank">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8A8.5 8.5 0 0 1 3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3h.5a8.48 8.48 0 0 1 8 8z"/></svg></div>
+    <span>Hubungi Owner</span>
+  </a>
+  <div class="menu-item out" onclick="doLogout()">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
+    <span>Logout</span>
+  </div>
+</div>
+
+<div class="header-img">
+  <div class="neon-sign">XYREX</div>
+  <svg class="city-bg" viewBox="0 0 400 200" preserveAspectRatio="none">
+    <rect x="0" y="120" width="400" height="80" fill="#06122a"/>
+    <rect x="30" y="60" width="60" height="140" fill="#0a1a3a"/>
+    <rect x="100" y="90" width="50" height="110" fill="#0d2247"/>
+    <rect x="160" y="40" width="70" height="160" fill="#0a1a3a"/>
+    <rect x="240" y="100" width="55" height="100" fill="#0d2247"/>
+    <rect x="305" y="70" width="60" height="130" fill="#0a1a3a"/>
+    <circle cx="200" cy="30" r="18" fill="none" stroke="#ffe600" stroke-width="2"/>
+    <circle cx="200" cy="30" r="8" fill="#ffe600"/>
+    <rect x="0" y="180" width="400" height="20" fill="#03101f"/>
+  </svg>
+</div>
+
+<div class="title-wrap">
+  <div class="title">XYREX</div>
+  <div class="subtitle">Aplikasi Yang Dikembangkan DLIZ</div>
+</div>
+
+<div class="section-label">Fitur Tersedia</div>
+
+<a class="feature-card chat" href="/chat.html">
+  <div class="fc-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3h.5a8.48 8.48 0 0 1 8 8z"/></svg></div>
+  <div class="fc-text"><div class="fc-title">Chat Public</div><div class="fc-desc">Obrolan bersama semua user XYREX di room global</div></div>
+  <div class="fc-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+</a>
+
+
+
+
+<a class="feature-card" href="/pairing.html">
+  <div class="fc-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div>
+  <div class="fc-text"><div class="fc-title">Pairing Sender</div><div class="fc-desc">Hubungkan sender WhatsApp ke XYREX</div></div>
+  <div class="fc-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+</a>
+
+<a class="feature-card tools" href="/tools.html" style="display:flex; align-items:center; gap:14px; background:#fff; border:3px solid #0a0a0a; border-radius:16px; margin:12px 22px; padding:16px; box-shadow:4px 4px 0 #0a0a0a; text-decoration:none; color:#0a1a3a;">
+  <div style="width:52px; height:52px; border:3px solid #0a0a0a; border-radius:14px; background:#8b5cf6; color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+  </div>
+  <div style="flex:1; min-width:0;">
+    <div style="font-size:16px; font-weight:800;">Tools</div>
+    <div style="font-size:12px; color:#4a5a7a; margin-top:3px;">Video, Gmail, Anime, Music</div>
+  </div>
+  <div style="color:#0a1a3a;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+</a>
+
+<a class="feature-card bugnumber" href="/bug.html" style="display:flex; align-items:center; gap:14px; background:#fff; border:3px solid #0a0a0a; border-radius:16px; margin:12px 22px; padding:16px; box-shadow:4px 4px 0 #0a0a0a; text-decoration:none; color:#0a1a3a;">
+  <div style="width:52px; height:52px; border:3px solid #0a0a0a; border-radius:14px; background:#b00020; color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></div>
+  <div style="flex:1; min-width:0;"><div style="font-size:16px; font-weight:800;">Bug Nomor</div><div style="font-size:12px; color:#4a5a7a; margin-top:3px;">Kirim payload bug ke nomor target</div></div>
+  <div style="color:#0a1a3a;"></div>
+</a>
+
+<a class="feature-card bangrup" href="/bangrup.html" style="display:flex; align-items:center; gap:14px; background:#fff; border:3px solid #0a0a0a; border-radius:16px; margin:12px 22px; padding:16px; box-shadow:4px 4px 0 #0a0a0a; text-decoration:none; color:#0a1a3a;">
+  <div style="width:52px; height:52px; border:3px solid #0a0a0a; border-radius:14px; background:#b00020; color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+  <div style="flex:1; min-width:0;"><div style="font-size:16px; font-weight:800;">Ban Grup</div><div style="font-size:12px; color:#4a5a7a; margin-top:3px;">Masuk & keluar grup berkali-kali</div></div>
+  <div style="color:#0a1a3a;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+</a>
+
+<a class="feature-card owner hidden" id="featureOwner" href="/owner.html">
+  <div class="fc-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+  <div class="fc-text"><div class="fc-title">Panel Owner</div><div class="fc-desc">Kelola akun dan role user XYREX</div></div>
+  <div class="fc-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+</a>
+
+<div class="footer">
+  <div class="by">By: DLIZ</div>
+  <div class="cr">&copy; 2026 XYREX - All Rights Reserved</div>
+</div>
+
+<script>
+const token = localStorage.getItem('xyrex_token');
+const role = localStorage.getItem('xyrex_role');
+const user = localStorage.getItem('xyrex_user');
+if (!token) window.location.href = '/login.html';
+
+document.getElementById('userMini').textContent = (user || '-').toUpperCase();
+document.getElementById('sidebarUser').textContent = user || '-';
+document.getElementById('sidebarRole').textContent = (role || '-').toUpperCase();
+if (role === 'owner') {
+  document.getElementById('menuOwner').classList.remove('hidden');
+  document.getElementById('featureOwner').classList.remove('hidden');
+}
+
+function toggleMenu() {
+  document.getElementById('sidebar').classList.toggle('show');
+  document.getElementById('overlay').classList.toggle('show');
+}
+
+async function doLogout() {
+  try { await fetch('/api/logout', { method: 'POST', headers: { 'x-auth-token': token } }); } catch(e) {}
+  localStorage.clear();
+  window.location.href = '/login.html';
+}
+</script>
+
+<script src="/tools-toast.js"></script>
+<script src="/global-player-iframe.js"></script>
+</body>
+</html>
+
+
+--- FILE: public/chat.html ---
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>XYREX - Chat Public</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  html { height: 100%; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; flex-shrink: 0; }
+  .hamburger { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #1a5fd6; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; box-shadow: 3px 3px 0 #0a0a0a; }
+  .hamburger:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .hamburger span { display: block; width: 22px; height: 3px; background: #fff; border-radius: 2px; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 200; }
+  .overlay.show { display: block; }
+  .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100vh; height: 100dvh; background: #fff; border-right: 3px solid #0a0a0a; z-index: 300; transition: left 0.25s ease; overflow-y: auto; }
+  .sidebar.show { left: 0; }
+  .sidebar-head { background: linear-gradient(135deg, #0a1a3a 0%, #1e3a6e 100%); padding: 22px 18px; border-bottom: 3px solid #0a0a0a; }
+  .sidebar-head .s-title { color: #ffe600; font-size: 22px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 0 10px #ffe600; }
+  .sidebar-head .s-sub { color: #a8b8d8; font-size: 12px; margin-top: 4px; }
+  .sidebar-head .s-user { color: #fff; font-size: 13px; margin-top: 10px; font-weight: 700; }
+  .sidebar-head .s-role { display: inline-block; background: #ffe600; color: #0a1a3a; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; margin-top: 6px; }
+  .menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 2px solid #e0e0e0; cursor: pointer; text-decoration: none; color: #0a1a3a; font-weight: 700; font-size: 15px; }
+  .menu-item:active { background: #f5f8ff; }
+  .menu-item .ico { width: 38px; height: 38px; border: 2px solid #0a0a0a; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #1a5fd6; color: #fff; flex-shrink: 0; }
+  .menu-item.home .ico { background: #0a1a3a; }
+  .menu-item.dev .ico { background: #4db8e8; }
+  .menu-item.own .ico { background: #25d366; }
+  .menu-item.adm .ico { background: #ffe600; color: #0a0a0a; }
+  .menu-item.out .ico { background: #b00020; }
+  .menu-item.hidden { display: none; }
+
+  .page-head { padding: 14px 22px 6px 22px; flex-shrink: 0; }
+  .page-head .p-title { font-size: 26px; font-weight: 800; color: #0a1a3a; }
+  .page-head .p-title span { color: #1a5fd6; }
+  .page-head .p-sub { color: #4a5a7a; font-size: 13px; margin-top: 2px; }
+
+  .chat-wrap { flex: 1; margin: 10px 22px 18px 22px; background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; box-shadow: 4px 4px 0 #0a0a0a; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+  .chat-head { background: linear-gradient(135deg, #0a1a3a 0%, #1e3a6e 100%); padding: 12px 14px; border-bottom: 3px solid #0a0a0a; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .chat-head .ch-title { color: #ffe600; font-weight: 800; font-size: 15px; letter-spacing: 0.5px; }
+  .chat-head .ch-live { margin-left: auto; background: #25d366; color: #fff; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; }
+  .chat-body { flex: 1; overflow-y: auto; padding: 10px; background: #f5f8ff; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  .chat-msg { background: #fff; border: 2px solid #0a0a0a; border-radius: 12px; padding: 8px 10px; max-width: 85%; align-self: flex-start; box-shadow: 2px 2px 0 #0a0a0a; }
+  .chat-msg.self { background: #d4e4ff; align-self: flex-end; }
+  .chat-msg .cm-head { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+  .chat-msg .cm-user { font-weight: 800; font-size: 12px; color: #0a1a3a; }
+  .chat-msg .cm-role { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; }
+  
+  
+  
+  
+  .chat-msg .cm-text { font-size: 13px; color: #0a1a3a; word-break: break-word; white-space: pre-wrap; }
+  .chat-msg .cm-time { font-size: 10px; color: #7a8aaa; margin-top: 3px; text-align: right; }
+  .chat-input { display: flex; gap: 8px; padding: 10px 10px calc(10px + env(safe-area-inset-bottom)); border-top: 3px solid #0a0a0a; background: #fff; flex-shrink: 0; }
+  .chat-input input { flex: 1; padding: 10px 12px; border: 2px solid #0a0a0a; border-radius: 10px; font-size: 14px; background: #f5f8ff; min-width: 0; }
+  .chat-input input:focus { outline: none; border-color: #1a5fd6; }
+  .chat-input button { padding: 10px 16px; border: 2px solid #0a0a0a; border-radius: 10px; background: #1a5fd6; color: #fff; font-weight: 800; cursor: pointer; box-shadow: 2px 2px 0 #0a0a0a; flex-shrink: 0; }
+  .chat-input button:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .chat-empty { text-align: center; color: #7a8aaa; font-size: 13px; padding: 20px; }
+
+  .chat-msg .cm-role { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 4px; }
+  .chat-msg .cm-role.member { background: #d4e4ff; color: #1a5fd6; }
+  .chat-msg .cm-role.premium { background: #ffd4d4; color: #b00020; }
+  .chat-msg .cm-role.owner { background: #ffe600; color: #0a1a3a; }
+  .chat-msg .cm-role.admin { background: #e8d4ff; color: #6a1b9a; }
+  .chat-msg .cm-avatar { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #0a0a0a; background: #8b5cf6; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; overflow: hidden; }
+  .chat-msg .cm-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .chat-msg .cm-row { display: flex; gap: 8px; align-items: flex-start; }
+  .chat-msg .cm-content { flex: 1; min-width: 0; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/index.html" style="display:flex; width:44px; height:44px; border:3px solid #0a0a0a; border-radius:12px; background:#fff; cursor:pointer; align-items:center; justify-content:center; box-shadow:3px 3px 0 #0a0a0a; text-decoration:none; color:#0a1a3a;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"/>
+      <polyline points="12 19 5 12 12 5"/>
+    </svg>
+  </a>
+  <div class="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+  <div class="brand">XYREX</div>
+  <div class="user-mini" id="userMini">-</div>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<div class="sidebar" id="sidebar">
+<div class="sidebar-head">
+    <div class="s-title">XYREX</div>
+    <div class="s-sub">Aplikasi Yang Dikembangkan DLIZ</div>
+    <div class="s-user" id="sidebarUser">-</div>
+    <div class="s-role" id="sidebarRole">-</div>
+  </div>
+
+    <a class="menu-item home" href="/index.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+    <span>Home</span>
+  </a>
+  <a class="menu-item" href="/chat.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3h.5a8.48 8.48 0 0 1 8 8z"/></svg></div>
+    <span>Chat Public</span>
+  </a>
+  
+  <a class="menu-item" href="/tools.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+    <span>Tools</span>
+  </a>
+  <a class="menu-item" href="/settings.html">
+    <div class="ico" style="background:#8b5cf6;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+    <span>Pengaturan</span>
+  </a>
+
+  <a class="menu-item" href="/pairing.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg></div>
+    <span>Pairing Sender</span>
+  </a>
+  <a class="menu-item" href="/bug.html">
+    <div class="ico" style="background:#b00020;" style="background:#b00020;" style="background:#b00020;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></div>
+    <span>Bug Nomor</span>
+  </a>
+  <a class="menu-item" href="/bangrup.html">
+    <div class="ico" style="background:#b00020;" style="background:#b00020;" style="background:#b00020;" style="background:#b00020;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+    <span>Ban Grup</span>
+  </a>
+  <a class="menu-item adm hidden" id="menuOwner" href="/owner.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+    <span>Panel Owner</span>
+  </a>
+  <a class="menu-item own" href="https://wa.me/6283891660447" target="_blank">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8A8.5 8.5 0 0 1 3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3h.5a8.48 8.48 0 0 1 8 8z"/></svg></div>
+    <span>Hubungi Owner</span>
+  </a>
+  <div class="menu-item out" onclick="doLogout()">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
+    <span>Logout</span>
+  </div>
+</div>
+
+<div class="page-head">
+  <div class="p-title">Chat <span>Public</span></div>
+  <div class="p-sub">Obrolan bersama semua user XYREX</div>
+</div>
+
+<div class="chat-wrap">
+  <div class="chat-head">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffe600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+    </svg>
+    <div class="ch-title">Room Global</div>
+    <div class="ch-live">LIVE</div>
+  </div>
+  <div class="chat-body" id="chatBody">
+    <div class="chat-empty">Belum ada pesan. Jadilah yang pertama!</div>
+  </div>
+  <div class="chat-input">
+    <input type="text" id="chatInput" placeholder="Tulis pesan..." maxlength="500" onkeypress="if(event.key==='Enter') sendChat()">
+    <button onclick="sendChat()">Kirim</button>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const token = localStorage.getItem('xyrex_token');
+const role = localStorage.getItem('xyrex_role');
+const user = localStorage.getItem('xyrex_user');
+
+if (!token) { window.location.href = '/login.html'; }
+
+document.getElementById('userMini').textContent = (user || '-').toUpperCase();
+document.getElementById('sidebarUser').textContent = user || '-';
+document.getElementById('sidebarRole').textContent = (role || '-').toUpperCase();
+
+if (role === 'owner') {
+  document.getElementById('menuOwner').classList.remove('hidden');
+}
+
+function toggleMenu() {
+  document.getElementById('sidebar').classList.toggle('show');
+  document.getElementById('overlay').classList.toggle('show');
+}
+
+async function doLogout() {
+  try { await fetch('/api/logout', { method: 'POST', headers: { 'x-auth-token': token } }); } catch(e) {}
+  localStorage.removeItem('xyrex_player');
+  localStorage.removeItem('xyrex_token');
+  localStorage.removeItem('xyrex_user');
+  localStorage.removeItem('xyrex_role');
+  window.location.href = '/login.html';
+}
+
+const socket = io();
+const chatBody = document.getElementById('chatBody');
+let renderedIds = new Set();
+
+function roleClass(r) {
+  if (!r) return 'member';
+  const lower = String(r).toLowerCase();
+  if (['member', 'premium', 'owner', 'admin'].includes(lower)) return lower;
+  return 'member';
+}
+
+function fmtTime(ts) {
+  const d = new Date(ts);
+  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function appendMsg(m) {
+  const id = m.username + '|' + m.time + '|' + m.message;
+  if (renderedIds.has(id)) return;
+  renderedIds.add(id);
+
+  const empty = chatBody.querySelector('.chat-empty');
+  if (empty) empty.remove();
+
+  const div = document.createElement('div');
+  div.className = 'chat-msg' + (m.username === user ? ' self' : '');
+  
+  // Avatar: foto profil atau initial
+  const initial = (m.username || '?').charAt(0).toUpperCase();
+  let avatarHtml = '<div class="cm-avatar" id="av_' + m.username + '_' + m.time + '">' + initial + '</div>';
+  
+  const roleCls = roleClass(m.role);
+  const roleLabel = (m.role || 'member').toUpperCase();
+  
+  div.innerHTML = '<div class="cm-row">' + avatarHtml +
+    '<div class="cm-content">' +
+    '<div class="cm-head"><span class="cm-user">' + escapeHtml(m.username) + '</span>' +
+    '<span class="cm-role ' + roleCls + '">' + roleLabel + '</span></div>' +
+    '<div class="cm-text">' + escapeHtml(m.message) + '</div>' +
+    '<div class="cm-time">' + fmtTime(m.time) + '</div>' +
+    '</div></div>';
+  chatBody.appendChild(div);
+  chatBody.scrollTop = chatBody.scrollHeight;
+  
+  // Load avatar dari server
+  fetch('/api/profile/' + encodeURIComponent(m.username), { headers: { 'x-auth-token': token } })
+    .then(r => r.json())
+    .then(p => {
+      if (p.ok && p.avatar) {
+        const av = document.getElementById('av_' + m.username + '_' + m.time);
+        if (av) av.innerHTML = '<img src="' + p.avatar + '">';
+      }
+    }).catch(() => {});
+}
+
+function escapeAttr(s) {
+  return String(s || '').replace(/'/g, '\\\'').replace(/"/g, '');
+}
+
+
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  socket.emit('chatSend', { username: user, role: role, message: text });
+  input.value = '';
+}
+
+socket.on('chatHistory', (msgs) => {
+  chatBody.innerHTML = '';
+  renderedIds.clear();
+  if (!msgs || msgs.length === 0) {
+    chatBody.innerHTML = '<div class="chat-empty">Belum ada pesan. Jadilah yang pertama!</div>';
+    return;
+  }
+  msgs.forEach(appendMsg);
+});
+
+socket.on('chatMessage', (m) => { appendMsg(m); });
+</script>
+
+<script src="/tools-toast.js"></script>
+<script src="/global-player-iframe.js"></script>
+</body>
+</html>
+
+
+--- FILE: public/settings.html ---
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - Pengaturan</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .back-btn { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 28px; font-weight: 800; color: #0a1a3a; }
+  .title span { color: #1a5fd6; }
+  .subtitle { color: #4a5a7a; font-size: 13px; margin-top: 4px; }
+  .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 20px; box-shadow: 4px 4px 0 #0a0a0a; }
+  .card h2 { font-size: 16px; font-weight: 800; color: #0a1a3a; margin-bottom: 14px; }
+  label { display: block; font-weight: 700; color: #0a1a3a; margin-bottom: 6px; font-size: 13px; }
+  input { width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 14px; margin-bottom: 12px; background: #f5f8ff; }
+  input:focus { outline: none; border-color: #1a5fd6; }
+  .btn { display: block; width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; background: #1a5fd6; color: #fff; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .btn-secondary { background: #8b5cf6; }
+  .avatar-preview { width: 100px; height: 100px; border: 3px solid #0a0a0a; border-radius: 50%; background: #e0e7ff; color: #4a5a7a; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; margin: 0 auto 14px auto; overflow: hidden; }
+  .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar-input { display: none; }
+  .upload-label { display: block; text-align: center; background: #f5f8ff; border: 3px dashed #0a0a0a; border-radius: 12px; padding: 16px; cursor: pointer; margin-bottom: 12px; font-size: 13px; color: #4a5a7a; }
+  .upload-label:active { background: #d4e4ff; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/index.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
+  <div class="brand">Pengaturan</div>
+  <div class="user-mini" id="userMini">-</div>
+</div>
+
+<div class="title-wrap">
+  <div class="title">Pengaturan <span>Profil</span></div>
+  <div class="subtitle">Ubah foto profil dan sandi</div>
+</div>
+
+<div class="card">
+  <h2>Foto Profil</h2>
+  <div class="avatar-preview" id="avatarPreview">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 100%; height: 100%; padding: 18px;">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+  </div>
+  <input type="file" id="avatarInput" class="avatar-input" accept="image/*" onchange="uploadAvatar(event)">
+  <label for="avatarInput" class="upload-label">📷 Pilih Foto Profil (max 5MB)</label>
+</div>
+
+<div class="card">
+  <h2>Ubah Sandi</h2>
+  <label>Sandi Lama</label>
+  <input type="password" id="oldPassword" placeholder="Masukkan sandi lama">
+  <label>Sandi Baru</label>
+  <input type="password" id="newPassword" placeholder="Minimal 6 karakter">
+  <label>Konfirmasi Sandi Baru</label>
+  <input type="password" id="confirmPassword" placeholder="Ulangi sandi baru">
+  <button class="btn" onclick="changePassword()">Ubah Sandi</button>
+</div>
+
+<script src="/tools-toast.js"></script>
+<script>
+const token = localStorage.getItem('xyrex_token');
+const user = localStorage.getItem('xyrex_user');
+if (!token) window.location.href = '/login.html';
+document.getElementById('userMini').textContent = (user || '-').toUpperCase();
+
+function loadProfile() {
+  fetch('/api/profile', { headers: { 'x-auth-token': token } })
+    .then(r => r.json())
+    .then(j => {
+      if (j.ok) {
+        const av = document.getElementById('avatarPreview');
+        if (j.avatar) {
+          av.innerHTML = '<img src="' + j.avatar + '">';
+        } else {
+          // Fallback SVG avatar default
+          av.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 100%; height: 100%; padding: 18px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+        }
+      }
+    });
+}
+loadProfile();
+
+function uploadAvatar(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    window.xyrexToast('Foto max 5MB', 'error');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const dataUrl = reader.result;
+    
+    // Update UI LANGSUNG sebelum kirim ke server
+    document.getElementById('avatarPreview').innerHTML = '<img src="' + dataUrl + '">';
+    window.xyrexToast('Mengunggah foto...', 'info');
+
+    fetch('/api/profile/avatar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+      body: JSON.stringify({ avatar: dataUrl })
+    })
+    .then(r => r.json())
+    .then(j => {
+      if (j.ok) {
+        window.xyrexToast('Foto profil berhasil diupdate!', 'success');
+        loadProfile();
+      } else {
+        window.xyrexToast('Gagal: ' + j.msg, 'error');
+      }
+    }).catch(e => window.xyrexToast('Error: ' + e.message, 'error'));
+  };
+  reader.readAsDataURL(file);
+}
+
+function changePassword() {
+  const oldPw = document.getElementById('oldPassword').value;
+  const newPw = document.getElementById('newPassword').value;
+  const confirmPw = document.getElementById('confirmPassword').value;
+  if (!oldPw || !newPw || !confirmPw) { window.xyrexToast('Lengkapi semua field', 'error'); return; }
+  if (newPw !== confirmPw) { window.xyrexToast('Konfirmasi sandi tidak cocok', 'error'); return; }
+  if (newPw.length < 6) { window.xyrexToast('Sandi minimal 6 karakter', 'error'); return; }
+  fetch('/api/profile/password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+    body: JSON.stringify({ oldPassword: oldPw, newPassword: newPw })
+  })
+  .then(r => r.json())
+  .then(j => {
+    if (j.ok) {
+      window.xyrexToast('Sandi berhasil diubah!', 'success');
+      document.getElementById('oldPassword').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+    } else {
+      window.xyrexToast('Gagal: ' + j.msg, 'error');
+    }
+  });
+}
+</script>
+
+</body>
+</html>
+
+[END PART 3 - tunggu PART 4]

@@ -1,0 +1,444 @@
+=== BAGIAN 5 dari 10 ===
+JANGAN EKSEKUSI DULU. Tunggu sampai semua 10 bagian masuk.
+
+const chatBody = document.getElementById('chatBody');
+let renderedIds = new Set();
+
+function roleClass(r) {
+  if (!r) return 'member';
+  const lower = String(r).toLowerCase();
+  if (['member', 'premium', 'owner', 'admin'].includes(lower)) return lower;
+  return 'member';
+}
+
+function fmtTime(ts) {
+  const d = new Date(ts);
+  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function appendMsg(m) {
+  const id = m.username + '|' + m.time + '|' + m.message;
+  if (renderedIds.has(id)) return;
+  renderedIds.add(id);
+
+  const empty = chatBody.querySelector('.chat-empty');
+  if (empty) empty.remove();
+
+  const div = document.createElement('div');
+  div.className = 'chat-msg' + (m.username === user ? ' self' : '');
+  
+  // Avatar: foto profil atau initial
+  const initial = (m.username || '?').charAt(0).toUpperCase();
+  let avatarHtml = '<div class="cm-avatar" id="av_' + m.username + '_' + m.time + '">' + initial + '</div>';
+  
+  const roleCls = roleClass(m.role);
+  const roleLabel = (m.role || 'member').toUpperCase();
+  
+  div.innerHTML = '<div class="cm-row">' + avatarHtml +
+    '<div class="cm-content">' +
+    '<div class="cm-head"><span class="cm-user">' + escapeHtml(m.username) + '</span>' +
+    '<span class="cm-role ' + roleCls + '">' + roleLabel + '</span></div>' +
+    '<div class="cm-text">' + escapeHtml(m.message) + '</div>' +
+    '<div class="cm-time">' + fmtTime(m.time) + '</div>' +
+    '</div></div>';
+  chatBody.appendChild(div);
+  chatBody.scrollTop = chatBody.scrollHeight;
+  
+  // Load avatar dari server
+  fetch('/api/profile/' + encodeURIComponent(m.username), { headers: { 'x-auth-token': token } })
+    .then(r => r.json())
+    .then(p => {
+      if (p.ok && p.avatar) {
+        const av = document.getElementById('av_' + m.username + '_' + m.time);
+        if (av) av.innerHTML = '<img src="' + p.avatar + '">';
+      }
+    }).catch(() => {});
+}
+
+function escapeAttr(s) {
+  return String(s || '').replace(/'/g, '\\\'').replace(/"/g, '');
+}
+
+
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  socket.emit('chatSend', { username: user, role: role, message: text });
+  input.value = '';
+}
+
+socket.on('chatHistory', (msgs) => {
+  chatBody.innerHTML = '';
+  renderedIds.clear();
+  if (!msgs || msgs.length === 0) {
+    chatBody.innerHTML = '<div class="chat-empty">Belum ada pesan. Jadilah yang pertama!</div>';
+    return;
+  }
+  msgs.forEach(appendMsg);
+});
+
+socket.on('chatMessage', (m) => { appendMsg(m); });
+</script>
+
+<script src="/tools-toast.js"></script>
+<script src="/global-player-iframe.js"></script>
+</body>
+</html>
+
+===== FILE: public/pairing.html =====
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - Pairing Sender</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .hamburger { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #1a5fd6; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; box-shadow: 3px 3px 0 #0a0a0a; }
+  .hamburger:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .hamburger span { display: block; width: 22px; height: 3px; background: #fff; border-radius: 2px; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 200; }
+  .overlay.show { display: block; }
+  .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100vh; background: #fff; border-right: 3px solid #0a0a0a; z-index: 300; transition: left 0.25s ease; overflow-y: auto; }
+  .sidebar.show { left: 0; }
+  .sidebar-head { background: linear-gradient(135deg, #0a1a3a 0%, #1e3a6e 100%); padding: 22px 18px; border-bottom: 3px solid #0a0a0a; }
+  .sidebar-head .s-title { color: #ffe600; font-size: 22px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 0 10px #ffe600; }
+  .sidebar-head .s-sub { color: #a8b8d8; font-size: 12px; margin-top: 4px; }
+  .sidebar-head .s-user { color: #fff; font-size: 13px; margin-top: 10px; font-weight: 700; }
+  .sidebar-head .s-role { display: inline-block; background: #ffe600; color: #0a1a3a; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; margin-top: 6px; }
+  .menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 2px solid #e0e0e0; cursor: pointer; text-decoration: none; color: #0a1a3a; font-weight: 700; font-size: 15px; }
+  .menu-item:active { background: #f5f8ff; }
+  .menu-item .ico { width: 38px; height: 38px; border: 2px solid #0a0a0a; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #1a5fd6; color: #fff; flex-shrink: 0; }
+  .menu-item.home .ico { background: #0a1a3a; }
+  .menu-item.dev .ico { background: #4db8e8; }
+  .menu-item.own .ico { background: #25d366; }
+  .menu-item.adm .ico { background: #ffe600; color: #0a0a0a; }
+  .menu-item.out .ico { background: #b00020; }
+  .menu-item.hidden { display: none; }
+
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 32px; font-weight: 800; color: #0a1a3a; letter-spacing: -1px; }
+  .title span { color: #1a5fd6; }
+  .subtitle { color: #4a5a7a; font-size: 14px; margin-top: 4px; }
+  .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 20px; box-shadow: 4px 4px 0 #0a0a0a; }
+  .card-head { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: #0a1a3a; margin-bottom: 12px; }
+  .btn { display: block; width: calc(100% - 44px); margin: 12px 22px; padding: 16px; border: 3px solid #0a0a0a; border-radius: 14px; font-size: 17px; font-weight: 700; text-align: center; cursor: pointer; box-shadow: 4px 4px 0 #0a0a0a; text-decoration: none; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #0a0a0a; }
+  .btn-primary { background: #1a5fd6; color: #fff; }
+  .btn-danger { background: #b00020; color: #fff; }
+  .btn-sm { display: inline-block; width: auto; padding: 10px 16px; font-size: 13px; margin: 6px 6px 0 0; }
+  input { width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; margin-bottom: 12px; background: #f5f8ff; }
+  input:focus { outline: none; border-color: #1a5fd6; }
+  label { display: block; font-weight: 700; color: #0a1a3a; margin-bottom: 6px; font-size: 14px; }
+  .status { padding: 12px; border-radius: 10px; font-weight: 700; text-align: center; margin-bottom: 12px; font-size: 14px; }
+  .status-off { background: #ffe0e0; color: #b00020; border: 2px solid #b00020; }
+  .status-on { background: #d4ffd8; color: #0a7a2a; border: 2px solid #0a7a2a; }
+  .status-warn { background: #fff3cd; color: #856404; border: 2px solid #856404; }
+  .hidden { display: none; }
+  .bug-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .bug-opt { padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; cursor: pointer; font-weight: 700; background: #f5f8ff; }
+  .bug-opt.selected { background: #1a5fd6; color: #fff; }
+  .log-box { background: #0a0a0a; color: #00ff88; font-family: monospace; font-size: 12px; padding: 12px; border-radius: 10px; max-height: 200px; overflow-y: auto; margin-top: 10px; white-space: pre-wrap; }
+  .qr-box { text-align: center; padding: 10px; }
+  .qr-box img { width: 240px; height: 240px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; }
+  .code-box { background: #0a0a0a; color: #ffe600; font-family: monospace; font-size: 24px; padding: 16px; border-radius: 12px; text-align: center; letter-spacing: 3px; font-weight: 700; margin: 10px 0; word-break: break-all; }
+  .code-hint { font-size: 12px; color: #4a5a7a; text-align: center; margin-bottom: 8px; }
+  .countdown { text-align: center; font-weight: 700; color: #b00020; font-size: 13px; margin-bottom: 8px; }
+  .tab-btns { display: flex; gap: 8px; margin-bottom: 12px; }
+  .tab-btn { flex: 1; padding: 12px; border: 3px solid #0a0a0a; border-radius: 10px; background: #f5f8ff; font-weight: 700; cursor: pointer; text-align: center; font-size: 13px; }
+  .tab-btn.active { background: #1a5fd6; color: #fff; }
+  .steps { background: #f5f8ff; border: 2px dashed #1a5fd6; border-radius: 10px; padding: 12px; font-size: 13px; color: #2a3a5a; line-height: 1.7; margin-bottom: 10px; }
+  .steps b { color: #0a1a3a; }
+  .warning-box { background: #ffe0e0; border: 3px solid #b00020; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+  .warning-box .wtitle { display: flex; align-items: center; gap: 8px; font-weight: 800; color: #b00020; font-size: 15px; margin-bottom: 6px; }
+  .warning-box .wtext { color: #7a0015; font-size: 13px; line-height: 1.6; }
+  .warning-box .wtext ul { margin-left: 18px; margin-top: 4px; }
+  .warning-box .wtext li { margin-bottom: 3px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/index.html" style="display:flex; width:44px; height:44px; border:3px solid #0a0a0a; border-radius:12px; background:#fff; cursor:pointer; align-items:center; justify-content:center; box-shadow:3px 3px 0 #0a0a0a; text-decoration:none; color:#0a1a3a;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"/>
+      <polyline points="12 19 5 12 12 5"/>
+    </svg>
+  </a>
+  <div class="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+  <div class="brand">XYREX</div>
+  <div class="user-mini" id="userMini">-</div>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<div class="sidebar" id="sidebar">
+<div class="sidebar-head">
+    <div class="s-title">XYREX</div>
+    <div class="s-sub">Aplikasi Yang Dikembangkan DLIZ</div>
+    <div class="s-user" id="sidebarUser">-</div>
+    <div class="s-role" id="sidebarRole">-</div>
+  </div>
+
+    <a class="menu-item home" href="/index.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+    <span>Home</span>
+  </a>
+  <a class="menu-item" href="/chat.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3h.5a8.48 8.48 0 0 1 8 8z"/></svg></div>
+    <span>Chat Public</span>
+  </a>
+  <a class="menu-item" href="/tools.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+    <span>Tools</span>
+  </a>
+  <a class="menu-item" href="/settings.html">
+    <div class="ico" style="background:#8b5cf6;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+    <span>Pengaturan</span>
+  </a>
+
+  <a class="menu-item" href="/pairing.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg></div>
+    <span>Pairing Sender</span>
+  </a>
+  <a class="menu-item" href="/bug.html">
+    <div class="ico" style="background:#b00020;" style="background:#b00020;" style="background:#b00020;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></div>
+    <span>Bug Nomor</span>
+  </a>
+  <a class="menu-item" href="/bangrup.html">
+    <div class="ico" style="background:#b00020;" style="background:#b00020;" style="background:#b00020;" style="background:#b00020;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+    <span>Ban Grup</span>
+  </a>
+  <a class="menu-item adm hidden" id="menuOwner" href="/owner.html">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+    <span>Panel Owner</span>
+  </a>
+  <a class="menu-item own" href="https://wa.me/6283891660447" target="_blank">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8A8.5 8.5 0 0 1 3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3h.5a8.48 8.48 0 0 1 8 8z"/></svg></div>
+    <span>Hubungi Owner</span>
+  </a>
+  <div class="menu-item out" onclick="doLogout()">
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
+    <span>Logout</span>
+  </div>
+</div>
+
+<div class="title-wrap">
+  <div class="title">Pairing <span>Sender</span></div>
+  <div class="subtitle">Hubungkan sender WhatsApp ke XYREX</div>
+</div>
+
+<div class="card" id="step1">
+  <div class="tab-btns">
+    <div class="tab-btn active" id="tabQR" onclick="switchTab('qr')">Scan QR</div>
+    <div class="tab-btn" id="tabCode" onclick="switchTab('code')">Pairing Code</div>
+  </div>
+
+  <div id="areaQR">
+    <div class="steps">
+      <b>Cara Scan QR (disarankan):</b><br>
+      1. Klik <b>Pairing Sekarang</b> di bawah<br>
+      2. QR muncul, langsung buka WhatsApp sender<br>
+      3. <b>Perangkat Tertaut</b> &rarr; <b>Tautkan Perangkat</b> &rarr; <b>Scan QR</b><br>
+      4. Arahkan kamera ke QR di layar ini<br>
+      5. Tunggu 2-3 detik, status jadi Sender Pribadi Aktif
+    </div>
+    <button class="btn btn-primary" onclick="startQR()">Pairing Sekarang (QR)</button>
+  </div>
+
+  <div id="areaCode" class="hidden">
+    <div class="warning-box">
+      <div class="wtitle">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b00020" stroke-width="2.5">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        Peringatan Pairing Code
+      </div>
+      <div class="wtext">
+        Metode pairing code <b>tidak selalu berhasil</b>. Sering gagal karena:
+        <ul>
+          <li>Kode expired sebelum sempat diketik (valid &plusmn;60 detik)</li>
+          <li>Nomor sender bukan nomor WhatsApp aktif</li>
+          <li>Slot perangkat tertaut penuh (maks 4)</li>
+          <li>Kode diketik ke WA beda dengan nomor di input</li>
+          <li>WhatsApp tolak pairing dari perangkat tertentu</li>
+        </ul>
+        <b>Disarankan pakai Scan QR.</b>
+      </div>
+    </div>
+
+    <div class="steps">
+      <b>Cara Pairing Code:</b><br>
+      1. Isi nomor sender di bawah<br>
+      2. Buka WhatsApp sender &rarr; <b>Perangkat Tertaut</b> &rarr; <b>Tautkan dengan nomor telepon</b> (siapkan dulu)<br>
+      3. Baru klik <b>Pairing Sekarang</b><br>
+      4. Kode muncul &rarr; <b>langsung ketik</b> tanpa spasi dalam 20 detik
+    </div>
+    <label>Nomor WhatsApp Aktif (Sender)</label>
+    <input type="tel" id="senderNum" placeholder="628xxxxxxxxxx">
+    <button class="btn btn-primary" onclick="startPair()">Pairing Sekarang (Code)</button>
+  </div>
+
+  <div id="pairStatus" class="status status-off">Status: Belum Terpairing</div>
+  <div id="qrArea" class="qr-box hidden"></div>
+  <div id="codeArea" class="hidden">
+    <div class="code-hint">Ketik kode ini di WhatsApp tanpa spasi/tanda hubung:</div>
+    <div class="code-box" id="codeText">-</div>
+    <div class="countdown" id="countdown">-</div>
+  </div>
+  <div style="text-align:center; margin-top:10px;">
+    <button class="btn btn-danger btn-sm" onclick="resetSession()">Reset Sesi</button>
+  </div>
+</div>
+
+<div class="card hidden" id="step2">
+  <div class="status status-on" id="senderActive">Sender Pribadi Aktif</div>
+  <label>Nomor Target WhatsApp</label>
+  <input type="tel" id="targetNum" placeholder="628xxxxxxxxxx">
+  <label>Jumlah Payload (default 50)</label>
+  <input type="number" id="bugCount" value="50">
+  <label>Pilih Jenis Bug</label>
+  <div class="bug-options">
+    <div class="bug-opt" data-bug="crash" onclick="selectBug(this)">Crash</div>
+    <div class="bug-opt" data-bug="delay" onclick="selectBug(this)">Delay</div>
+    <div class="bug-opt" data-bug="foreclose" onclick="selectBug(this)">Foreclose</div>
+  </div>
+  <button class="btn btn-primary" onclick="executeBug()">Eksekusi Bug</button>
+  <div class="log-box" id="logBox">[XYREX] Menunggu perintah...</div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const token = localStorage.getItem('xyrex_token');
+const role = localStorage.getItem('xyrex_role');
+const user = localStorage.getItem('xyrex_user');
+
+if (!token) { window.location.href = '/login.html'; }
+
+document.getElementById('userMini').textContent = (user || '-').toUpperCase();
+document.getElementById('sidebarUser').textContent = user || '-';
+document.getElementById('sidebarRole').textContent = (role || '-').toUpperCase();
+
+if (role === 'owner') {
+  document.getElementById('menuOwner').classList.remove('hidden');
+}
+
+function toggleMenu() {
+  document.getElementById('sidebar').classList.toggle('show');
+  document.getElementById('overlay').classList.toggle('show');
+}
+
+async function doLogout() {
+  try { await fetch('/api/logout', { method: 'POST', headers: { 'x-auth-token': token } }); } catch(e) {}
+  localStorage.removeItem('xyrex_player');
+  localStorage.removeItem('xyrex_token');
+  localStorage.removeItem('xyrex_user');
+  localStorage.removeItem('xyrex_role');
+  window.location.href = '/login.html';
+}
+
+const socket = io();
+let selectedBug = null;
+let countdownTimer = null;
+
+function log(msg) {
+  const box = document.getElementById('logBox');
+  const t = new Date().toLocaleTimeString();
+  box.textContent += "\n[" + t + "] " + msg;
+  box.scrollTop = box.scrollHeight;
+}
+
+function switchTab(mode) {
+  document.getElementById('tabQR').classList.toggle('active', mode === 'qr');
+  document.getElementById('tabCode').classList.toggle('active', mode === 'code');
+  document.getElementById('areaQR').classList.toggle('hidden', mode !== 'qr');
+  document.getElementById('areaCode').classList.toggle('hidden', mode !== 'code');
+  document.getElementById('qrArea').classList.toggle('hidden', mode !== 'qr');
+  document.getElementById('codeArea').classList.toggle('hidden', mode !== 'code');
+}
+
+function startQR() {
+  document.getElementById('pairStatus').textContent = 'Status: Membuat sesi QR...';
+  document.getElementById('pairStatus').className = 'status status-warn';
+  document.getElementById('qrArea').classList.remove('hidden');
+  document.getElementById('codeArea').classList.add('hidden');
+  document.getElementById('qrArea').innerHTML = '<p style="color:#4a5a7a;">Memuat QR...</p>';
+  socket.emit('startQR');
+}
+
+function startPair() {
+  const num = document.getElementById('senderNum').value.trim();
+  if (!num || num.length < 10) { alert('Nomor tidak valid, minimal 10 digit'); return; }
+  if (countdownTimer) clearInterval(countdownTimer);
+  document.getElementById('pairStatus').textContent = 'Status: Membuat sesi code (tunggu 3-5 detik)...';
+  document.getElementById('pairStatus').className = 'status status-warn';
+  document.getElementById('qrArea').classList.add('hidden');
+  document.getElementById('codeArea').classList.remove('hidden');
+  socket.emit('startPairing', { phone: num });
+}
+
+function resetSession() {
+  if (countdownTimer) clearInterval(countdownTimer);
+  socket.emit('resetSession');
+  document.getElementById('pairStatus').textContent = 'Status: Sesi direset';
+  document.getElementById('pairStatus').className = 'status status-off';
+  document.getElementById('qrArea').innerHTML = '';
+  document.getElementById('codeText').textContent = '-';
+  document.getElementById('countdown').textContent = '-';
+}
+
+function selectBug(el) {
+  document.querySelectorAll('.bug-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedBug = el.dataset.bug;
+}
+
+function executeBug() {
+  const target = document.getElementById('targetNum').value.trim();
+  const count = parseInt(document.getElementById('bugCount').value) || 50;
+  if (!target) { log('ERROR: Target kosong'); return; }
+  if (!selectedBug) { log('ERROR: Pilih bug'); return; }
+  socket.emit('executeBug', { target, bugType: selectedBug, count });
+}
+
+socket.on('pairingCode', ({ code, clean, expireAt }) => {
+  document.getElementById('codeText').textContent = code;
+  document.getElementById('pairStatus').textContent = 'Status: Ketik kode ke WhatsApp ' + clean;
+  document.getElementById('pairStatus').className = 'status status-warn';
+  if (countdownTimer) clearInterval(countdownTimer);
+  countdownTimer = setInterval(() => {
+    const sisa = Math.max(0, Math.floor((expireAt - Date.now()) / 1000));
+    const el = document.getElementById('countdown');
+    if (sisa > 0) el.textContent = 'Kode expired dalam ' + sisa + ' detik';
+    else { el.textContent = 'Kode expired. Klik Reset Sesi.'; clearInterval(countdownTimer); }
+  }, 1000);
+});
+
+socket.on('qr', (dataURL) => {
+  document.getElementById('qrArea').classList.remove('hidden');
+  document.getElementById('qrArea').innerHTML = '<img src="' + dataURL + '">';
+});
+
+socket.on('connected', ({ sender }) => {
+  if (countdownTimer) clearInterval(countdownTimer);
+  document.getElementById('pairStatus').textContent = 'Status: Terpairing dengan ' + sender;
+  document.getElementById('pairStatus').className = 'status status-on';
+  document.getElementById('step2').classList.remove('hidden');
+  document.getElementById('senderActive').textContent = 'Sender Pribadi Aktif: ' + sender;
+
+=== AKHIR BAGIAN 5 ===
