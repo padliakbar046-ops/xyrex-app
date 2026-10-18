@@ -13,9 +13,12 @@ Aplikasi berbasis Node.js (Express + Socket.IO + Baileys) dengan tampilan Neo-br
   - Anime Search (AniList)
   - Music Player (iTunes API)
   - DDoS Server (HTTP Flood)
+  - Web Scanner (Celah Dasar)
+  - Inject Malware (Simulasi)
 - **Catatan User (Notes)**: Fitur seperti IG Notes. Bisa pasang lagu (dipotong max 30 detik), auto-expire 24 jam, dan maksimal 1 catatan per user.
 - **Panel Owner**: Kelola semua user (buat, ubah role, hapus).
 - **Panel Admin**: Hanya bisa membuat akun baru (Member/Premium).
+- **Avatar Preset**: 8 pilihan foto profil.
 
 ## Cara Install
 1. `git clone https://github.com/padliakbar046-ops/xyrex-app.git`

