@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (username) {
         userElements.forEach(el => {
             if (el.tagName === 'BUTTON' || el.tagName === 'SPAN' || el.tagName === 'DIV') {
-                // Jika tombolnya ada ikon minus (-), ganti dengan username
                 if (el.innerText === '-' || el.innerText === '') {
                     el.innerText = username.toUpperCase();
                 }
@@ -18,18 +17,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- 2. TAMBAHKAN TOMBOL LOGOUT DI SIDEBAR ---
-    // Cari elemen sidebar (biasanya punya id 'sidebar', class 'sidebar', atau div yang berisi menu)
+    // --- 2. SEMBUNYIKAN TOMBOL LOGOUT BAWAAN & TAMBAHKAN YANG BARU ---
     const sidebar = document.querySelector('.sidebar, #sidebar, .offcanvas, .menu');
     
     if (sidebar) {
-        // Cek apakah tombol logout sudah ada sebelumnya (biar tidak dobel)
+        // Cari semua elemen <a> atau <div> yang teksnya mengandung "Logout" di dalam sidebar
+        const existingLogoutLinks = Array.from(sidebar.querySelectorAll('a, div, button')).filter(el => {
+            // Pastikan hanya yang teksnya persis "Logout" atau mengandung kata Logout
+            return el.innerText && el.innerText.trim().toLowerCase() === 'logout';
+        });
+
+        // Sembunyikan tombol Logout bawaan
+        existingLogoutLinks.forEach(el => {
+            el.style.display = 'none';
+            // Atau sembunyikan parent-nya jika ada container
+            if (el.parentNode && el.parentNode.tagName !== 'BODY') {
+                el.parentNode.style.display = 'none';
+            }
+        });
+
+        // Tambahkan tombol Logout Neo-brutalism yang baru
         if (!document.getElementById('btn-logout-xyrex')) {
-            // Buat elemen tombol logout
             const logoutBtn = document.createElement('div');
             logoutBtn.id = 'btn-logout-xyrex';
             
-            // Styling Neo-brutalism (merah, border hitam tebal, shadow)
             logoutBtn.style.cssText = `
                 margin: 20px 15px; 
                 padding: 15px; 
@@ -48,7 +59,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 font-family: inherit;
             `;
             
-            // Tambahkan ikon SVG (opsional) dan teks
             logoutBtn.innerHTML = `
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -58,20 +68,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 LOGOUT
             `;
             
-            // Efek klik
             logoutBtn.onclick = function() {
-                // Hapus semua data sesi
-                localStorage.removeItem('username');
-                localStorage.removeItem('xyrex_user');
-                localStorage.removeItem('user');
-                localStorage.removeItem('token');
-                localStorage.clear(); // Bersihkan semua
-                
-                // Arahkan ke halaman login (index.html)
+                localStorage.clear();
                 window.location.href = 'index.html';
             };
 
-            // Masukkan tombol ke paling bawah sidebar
             sidebar.appendChild(logoutBtn);
         }
     }
