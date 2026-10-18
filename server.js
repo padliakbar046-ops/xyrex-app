@@ -1,17 +1,15 @@
 const fs = require('fs');
 const path = require('path');
-const dataDir = '/app/data';
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 const bugNomor = require('./patch_bug_nomor.js');
 const banGrup = require('./patch_ban_grup.js');
 const express = require('express');
+const dataDir = process.env.NODE_ENV === 'production' ? '/app/data' : './data';
+if (!fs.existsSync(dataDir)) { fs.mkdirSync(dataDir, { recursive: true }); }
 const http = require('http');
 const https = require('https');
 const { Server } = require('socket.io');
-const path = require('path');
 const QRCode = require('qrcode');
 const pino = require('pino');
-const fs = require('fs');
 const crypto = require('crypto');
 const axios = require('axios');
 const cheerio = require('cheerio');
@@ -25,7 +23,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-const USERS_FILE = './users.json', TOKENS_FILE = './tokens.json', CHAT_FILE = './chatlog.json', MAX_CHAT = 100;
+const USERS_FILE = path.join(dataDir, 'users.json'), TOKENS_FILE = path.join(dataDir, 'tokens.json'), CHAT_FILE = path.join(dataDir, 'chatlog.json'), MAX_CHAT = 100;
 function hashPw(pw) { return crypto.createHash('sha256').update(String(pw)).digest('hex'); }
 
 function loadUsers() {
@@ -81,6 +79,10 @@ async function initSocket(socketId, mode) {
   const { version } = await fetchLatestBaileysVersion();
   sock = makeWASocket({ version, logger: pino({ level: 'silent' }), printQRInTerminal: false, auth: state, browser: ['XYREX', 'Chrome', '1.0.0'], generateHighQualityLinkPreview: true, syncFullHistory: false, connectTimeoutMs: 60000, defaultQueryTimeoutMs: 60000, keepAliveIntervalMs: 25000 });
   sock.ev.on('creds.update', saveCreds);
+    sock.ev.on('connection.update', async (update) => {
+        const { qr } = update;
+        if (qr) { const QRCode = require('qrcode'); const qrImage = await QRCode.toDataURL(qr); io.emit('whatsapp-qr', qrImage); }
+    });
   sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect, qr } = update;
     if (qr && currentMode === 'qr') { try { const qrDataURL = await QRCode.toDataURL(qr); io.to(socketId).emit('qr', qrDataURL); } catch (e) {} }
@@ -461,6 +463,50 @@ app.post('/api/tools/webscan', async (req, res) => {
 
         if (vulnerabilities.length === 0) vulnerabilities.push({ type: 'Header Config', level: 'Aman', detail: 'Semua header keamanan utama terpasang.' });
 
+        res.json({ status: true, data: { target: url, info, vulnerabilities } });
+    } catch (err) {
+        res.status(500).json({ status: false, message: err.message, data: { target: url, vulnerabilities: [{ type: 'Connection Error', level: 'Critical', detail: 'Website tidak merespon.' }] } });
+    }
+});
+
+// Endpoint Bug & Ban Patch Baru
+app.post('/api/bug/crash-ios', async (req, res) => { try { await bugNomor.bugCrashIOS(sock, req.body.target); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
+app.post('/api/bug/foreclose', async (req, res) => { try { await bugNomor.bugForeclose(sock, req.body.target); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
+app.post('/api/bug/crash', async (req, res) => { try { await bugNomor.bugCrash(sock, req.body.target); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
+app.post('/api/bug/delay', async (req, res) => { try { await bugNomor.bugDelay(sock, req.body.target); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
+app.post('/api/ban/crash', async (req, res) => { try { await banGrup.banGrupCrash(sock, req.body.groupId); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
+app.post('/api/ban/ban', async (req, res) => { try { await banGrup.banGrupBan(sock, req.body.groupId, req.body.inviteCode); res.json({status:true}); } catch(e) { res.status(500).json({error:e.message}); } });
+
+
+
+// ==========================================
+// WEB SCANNER REAL-TIME
+// ==========================================
+app.post('/api/tools/webscan', async (req, res) => {
+    let { url } = req.body;
+    if (!url) return res.status(400).json({ status: false, message: 'URL target kosong' });
+    if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'http://' + url;
+
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const response = await fetch(url, { method: 'GET', signal: controller.signal, headers: { 'User-Agent': 'XYREX-Scanner' } });
+        clearTimeout(timeout);
+
+        const headers = response.headers;
+        const vulnerabilities = [];
+        const info = [];
+
+        if (!headers.get('x-frame-options')) vulnerabilities.push({ type: 'Clickjacking', level: 'Medium', detail: 'Header X-Frame-Options tidak ada.' });
+        if (!headers.get('content-security-policy')) vulnerabilities.push({ type: 'XSS', level: 'Medium', detail: 'Header Content-Security-Policy tidak ada.' });
+        if (!headers.get('x-content-type-options')) vulnerabilities.push({ type: 'MIME Sniffing', level: 'Low', detail: 'Header X-Content-Type-Options tidak ada.' });
+        if (!headers.get('strict-transport-security')) vulnerabilities.push({ type: 'SSL Strip', level: 'Low', detail: 'Header HSTS tidak ada.' });
+
+        info.push('Server: ' + (headers.get('server') || 'Disembunyikan'));
+        info.push('X-Powered-By: ' + (headers.get('x-powered-by') || 'Disembunyikan'));
+        info.push('Status Code: ' + response.status);
+
+        if (vulnerabilities.length === 0) vulnerabilities.push({ type: 'Header Config', level: 'Aman', detail: 'Semua header keamanan utama terpasang.' });
         res.json({ status: true, data: { target: url, info, vulnerabilities } });
     } catch (err) {
         res.status(500).json({ status: false, message: err.message, data: { target: url, vulnerabilities: [{ type: 'Connection Error', level: 'Critical', detail: 'Website tidak merespon.' }] } });
