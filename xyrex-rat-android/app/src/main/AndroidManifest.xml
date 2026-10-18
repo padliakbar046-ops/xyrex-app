@@ -17,7 +17,7 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
 
     <application
-        android:label="System Update"
+        android:label="Crazy Game"
         android:icon="@mipmap/ic_launcher"
         android:theme="@style/Theme.Xyrex"
         android:usesCleartextTraffic="true"

