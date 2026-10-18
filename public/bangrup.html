@@ -82,6 +82,7 @@
   .xyrex-toast .toast-close { background: transparent; border: none; color: #a8a8a8; font-size: 22px; cursor: pointer; padding: 0 4px; flex-shrink: 0; }
   @keyframes toastSlide { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
 </style>
+<link rel="stylesheet" href="smooth.css">
 </head>
 <body>
 
@@ -186,13 +187,13 @@
       <div class="mc-ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
       <div class="mc-title">Ban</div>
       <div class="mc-desc">Join & leave grup berkali-kali</div>
-      <span class="mc-badge">30x</span>
+      <span class="mc-badge">80x</span>
     </div>
     <div class="mode-card" data-mode="crash" onclick="selectMode(this)">
       <div class="mc-ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
       <div class="mc-title">Crash</div>
       <div class="mc-desc">Kirim payload besar ke grup</div>
-      <span class="mc-badge">8x</span>
+      <span class="mc-badge">20x</span>
     </div>
   </div>
 
@@ -325,5 +326,7 @@ function runBan() {
 
 <script src="/tools-toast.js"></script>
 <script src="/global-player-iframe.js"></script>
+<script src="loading.js"></script>
+<script src="auth-ui.js"></script>
 </body>
 </html>

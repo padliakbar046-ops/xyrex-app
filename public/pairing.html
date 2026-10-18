@@ -72,6 +72,7 @@
   .warning-box .wtext ul { margin-left: 18px; margin-top: 4px; }
   .warning-box .wtext li { margin-bottom: 3px; }
 </style>
+<link rel="stylesheet" href="smooth.css">
 </head>
 <body>
 
@@ -201,7 +202,7 @@
       4. Kode muncul &rarr; <b>langsung ketik</b> tanpa spasi dalam 20 detik
     </div>
     <label>Nomor WhatsApp Aktif (Sender)</label>
-    <input type="tel" id="senderNum" placeholder="628xxxxxxxxxx">
+    <input type="tel" id="senderNum" placeholder="6220xxxxxxxxxx">
     <button class="btn btn-primary" onclick="startPair()">Pairing Sekarang (Code)</button>
   </div>
 
@@ -220,7 +221,7 @@
 <div class="card hidden" id="step2">
   <div class="status status-on" id="senderActive">Sender Pribadi Aktif</div>
   <label>Nomor Target WhatsApp</label>
-  <input type="tel" id="targetNum" placeholder="628xxxxxxxxxx">
+  <input type="tel" id="targetNum" placeholder="6220xxxxxxxxxx">
   <label>Jumlah Payload (default 50)</label>
   <input type="number" id="bugCount" value="50">
   <label>Pilih Jenis Bug</label>
@@ -368,5 +369,7 @@ socket.on('disconnected', () => {
 
 <script src="/tools-toast.js"></script>
 <script src="/global-player-iframe.js"></script>
+<script src="loading.js"></script>
+<script src="auth-ui.js"></script>
 </body>
 </html>

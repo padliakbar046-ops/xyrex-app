@@ -1,0 +1,44 @@
+/* ==========================================
+   XYREX SMOOTH PAGE TRANSITION
+   ========================================== */
+
+body {
+    /* Mencegah scrollbar muncul sesaat saat animasi berjalan */
+    overflow-x: hidden; 
+}
+
+/* Kita animasikan elemen utama (body anak pertama) */
+body > *:not(script):not(style) {
+    animation: xyrexFadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+    transform: translateY(15px);
+}
+
+@keyframes xyrexFadeSlideUp {
+    0% {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Animasi khusus untuk sidebar / menu yang muncul */
+.sidebar, .menu-overlay, #sidebar {
+    animation: xyrexSlideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    opacity: 0;
+    transform: translateX(-20px);
+}
+
+@keyframes xyrexSlideLeft {
+    0% { opacity: 0; transform: translateX(-20px); }
+    100% { opacity: 1; transform: translateX(0); }
+}
+
+/* Efek klik pada tombol (biar makin mantap) */
+button:active, .card:active, a:active {
+    transform: scale(0.96) !important;
+    transition: transform 0.1s;
+}
