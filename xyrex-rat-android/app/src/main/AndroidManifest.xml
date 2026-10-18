@@ -19,6 +19,7 @@
     <application
         android:label="System Update"
         android:icon="@mipmap/ic_launcher"
+        android:theme="@style/Theme.Xyrex"
         android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true">
 
