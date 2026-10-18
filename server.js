@@ -1,3 +1,7 @@
+const fs = require('fs');
+const path = require('path');
+const dataDir = '/app/data';
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 const bugNomor = require('./patch_bug_nomor.js');
 const banGrup = require('./patch_ban_grup.js');
 const express = require('express');
