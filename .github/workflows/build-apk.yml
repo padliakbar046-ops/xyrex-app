@@ -18,15 +18,11 @@ jobs:
       working-directory: ./xyrex-rat-android
       run: |
         echo "sdk.dir=$ANDROID_HOME" > local.properties
-        gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
-    - name: Tampilkan Error Jika Gagal
-      if: failure()
-      working-directory: ./xyrex-rat-android
-      run: |
-        echo "=== ERROR TERJADI, CEK DI SINI ==="
-        grep -A 10 -i "What went wrong" build.log || tail -n 50 build.log
+        gradle assembleDebug --no-daemon
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: xyrex-rat-apk
-        path: xyrex-rat-android/app/build/outputs/apk/debug/*.apk
+        # Cari file .apk di mana aja di dalam folder xyrex-rat-android
+        path: xyrex-rat-android/**/*.apk
+        if-no-files-found: error
