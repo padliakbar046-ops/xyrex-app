@@ -1,12 +1,7 @@
 node_modules/
-auth/
+.env
 data/
-users.json
-tokens.json
-chatlog.json
+logs/
 *.log
+*.broken
 .DS_Store
-server.js.beforefix
-server.js.beforefix2
-server.js.rusak
-server.js.broken
